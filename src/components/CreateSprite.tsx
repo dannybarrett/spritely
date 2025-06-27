@@ -35,6 +35,8 @@ export default function CreateSprite() {
 
     const newSprite: Sprite = {
       name: values.name,
+      width: values.width,
+      height: values.height,
       colors: defaultColors,
       frames: [
         {
