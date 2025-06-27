@@ -1,6 +1,7 @@
 export interface Sprite {
   name: string;
   frames: Frame[];
+  colors: Pixel[];
 }
 
 export interface Frame {

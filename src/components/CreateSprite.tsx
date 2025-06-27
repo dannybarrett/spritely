@@ -28,6 +28,10 @@ export default function CreateSprite() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     const newSprite: Sprite = {
       name: values.name,
+      colors: [
+        { r: 255, g: 255, b: 255, a: 255 },
+        { r: 0, g: 0, b: 0, a: 255 },
+      ],
       frames: [
         {
           layers: [
