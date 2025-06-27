@@ -1,14 +1,11 @@
-import { useEffect } from "react";
 import "./App.css";
 import CreateSprite from "./components/CreateSprite";
+import Editor from "./components/Editor/Editor";
+import EditorLayout from "./components/Editor/EditorLayout";
 import { SpriteState, useSpriteStore } from "./stores/spriteStore";
 
 function App() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
-
-  useEffect(() => {
-    console.log("sprite", sprite);
-  }, [sprite]);
 
   if (!sprite) {
     return (
@@ -18,7 +15,11 @@ function App() {
     );
   }
 
-  return <main>spritely</main>;
+  return (
+    <EditorLayout>
+      <Editor />
+    </EditorLayout>
+  );
 }
 
 export default App;
