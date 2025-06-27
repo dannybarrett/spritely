@@ -3,6 +3,7 @@ import { Sprite } from "../types/sprite";
 
 export interface SpriteState {
   sprite: Sprite | undefined;
+  setSprite: (newSprite: Sprite) => void;
 }
 
 export const useSpriteStore = create<SpriteState>(set => ({
