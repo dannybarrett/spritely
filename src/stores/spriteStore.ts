@@ -10,6 +10,10 @@ export interface SpriteState {
   setColor: (newColor: Pixel) => void;
   altColor: Pixel;
   setAltColor: (newColor: Pixel) => void;
+  history: Sprite[];
+  setHistory: (newHistory: Sprite[]) => void;
+  historyIndex: number;
+  setHistoryIndex: (newIndex: number) => void;
 }
 
 export const useSpriteStore = create<SpriteState>(set => ({
@@ -21,4 +25,8 @@ export const useSpriteStore = create<SpriteState>(set => ({
   setColor: (newColor: Pixel) => set({ color: newColor }),
   altColor: { r: 0, g: 0, b: 0, a: 255 },
   setAltColor: (newColor: Pixel) => set({ altColor: newColor }),
+  history: [],
+  setHistory: (newHistory: Sprite[]) => set({ history: newHistory }),
+  historyIndex: -1,
+  setHistoryIndex: (newIndex: number) => set({ historyIndex: newIndex }),
 }));
