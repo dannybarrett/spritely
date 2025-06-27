@@ -1,9 +1,14 @@
+import { useEffect } from "react";
 import "./App.css";
 import CreateSprite from "./components/CreateSprite";
 import { SpriteState, useSpriteStore } from "./stores/spriteStore";
 
 function App() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
+
+  useEffect(() => {
+    console.log("sprite", sprite);
+  }, [sprite]);
 
   if (!sprite) {
     return (

@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "spritely",
-        "width": 800,
-        "height": 600
+        "title": "Spritely",
+        "width": 1024,
+        "height": 576
       }
     ],
     "security": {
