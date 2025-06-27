@@ -1,7 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "./ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
@@ -82,7 +89,13 @@ export default function CreateSprite() {
             <FormItem>
               <FormLabel>Width</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input
+                  {...field}
+                  type="number"
+                  onChange={event =>
+                    field.onChange(parseInt(event.target.value))
+                  }
+                />
               </FormControl>
             </FormItem>
           )}
@@ -94,11 +107,18 @@ export default function CreateSprite() {
             <FormItem>
               <FormLabel>Height</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input
+                  {...field}
+                  type="number"
+                  onChange={event =>
+                    field.onChange(parseInt(event.target.value))
+                  }
+                />
               </FormControl>
             </FormItem>
           )}
         />
+        <FormMessage />
         <Button>Create sprite</Button>
       </form>
     </Form>
