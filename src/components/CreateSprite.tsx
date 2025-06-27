@@ -15,6 +15,8 @@ const formSchema = z.object({
 
 export default function CreateSprite() {
   const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
+  const setColor = useSpriteStore((state: SpriteState) => state.setColor);
+  const setAltColor = useSpriteStore((state: SpriteState) => state.setAltColor);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -26,12 +28,14 @@ export default function CreateSprite() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const defaultColors = [
+      { r: 255, g: 255, b: 255, a: 255 },
+      { r: 0, g: 0, b: 0, a: 255 },
+    ];
+
     const newSprite: Sprite = {
       name: values.name,
-      colors: [
-        { r: 255, g: 255, b: 255, a: 255 },
-        { r: 0, g: 0, b: 0, a: 255 },
-      ],
+      colors: defaultColors,
       frames: [
         {
           layers: [
@@ -49,6 +53,8 @@ export default function CreateSprite() {
     };
 
     setSprite(newSprite);
+    setColor(defaultColors[0]);
+    setAltColor(defaultColors[1]);
   }
 
   return (
