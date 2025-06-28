@@ -49,12 +49,10 @@ export default function CreateSprite() {
         {
           layers: [
             {
-              pixels: Array(values.width * values.height).fill({
-                r: 0,
-                g: 0,
-                b: 0,
-                a: 0,
-              }),
+              pixels: Array.from(
+                { length: values.width * values.height },
+                () => ({ r: 0, g: 0, b: 0, a: 0 })
+              ),
             },
           ],
         },
