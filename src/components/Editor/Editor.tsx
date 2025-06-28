@@ -1,6 +1,9 @@
-import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
-import { Frame, Pixel } from "@/types/sprite";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  deepCopySprite,
+  SpriteState,
+  useSpriteStore,
+} from "@/stores/spriteStore";
+import { useEffect, useRef, useState } from "react";
 
 export default function Editor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -55,7 +58,7 @@ export default function Editor() {
     }
 
     // draw sprite
-    const pixels = sprite.frames[0].layers[0].pixels; // we will worry about frames and layers later
+    let pixels = sprite.frames[0].layers[0].pixels; // we will worry about frames and layers later
     const u8Pixels = new Uint8Array(pixels.length * 4);
 
     for (let i = 0; i < pixels.length; i++) {
@@ -107,7 +110,7 @@ export default function Editor() {
       const mouseY = event.clientY - rect.top;
       const x = Math.floor(mouseX / spriteScale);
       const y = Math.floor(mouseY / spriteScale);
-      console.log(`Clicked at (${x}, ${y})`);
+      // console.log(`Clicked at (${x}, ${y})`);
 
       // out of bounds
       if (x < 0 || y < 0 || x >= sprite.width || y >= sprite.height) {
@@ -117,13 +120,11 @@ export default function Editor() {
       if (brush === "pencil") {
         const newColor = event.buttons === 1 ? color : altColor;
         const index = x + sprite.width * y;
-        const newFrames: Frame[] = [...sprite.frames];
-        newFrames[0].layers[0].pixels[index] = newColor;
+        const newSprite = deepCopySprite(sprite);
 
-        setSprite({
-          ...sprite,
-          frames: [...newFrames],
-        });
+        newSprite.frames[0].layers[0].pixels[index] = newColor;
+
+        setSprite(newSprite);
       }
     }
   }

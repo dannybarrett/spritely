@@ -1,3 +1,4 @@
+import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import {
   Menubar,
   MenubarContent,
@@ -5,8 +6,36 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from "../ui/menubar";
+import { useEffect } from "react";
 
 export default function Nav() {
+  const undo = useSpriteStore((state: SpriteState) => state.undo);
+  const redo = useSpriteStore((state: SpriteState) => state.redo);
+
+  function handleInput(event: KeyboardEvent) {
+    event.preventDefault();
+    console.log("key", event.key);
+    let meta = false;
+    let shift = false;
+
+    if (event.metaKey || event.ctrlKey) meta = true;
+    if (event.shiftKey) shift = true;
+
+    if (meta && event.key === "y") {
+      redo();
+    }
+
+    if (meta && event.key === "z") {
+      undo();
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleInput);
+
+    return () => document.removeEventListener("keydown", handleInput);
+  }, []);
+
   const menus = [
     {
       name: "File",
@@ -51,14 +80,13 @@ export default function Nav() {
         {
           name: "Undo",
           key: "Ctrl+Z",
-          disabled: false,
-          onClick: () => {},
+          onClick: () => undo(),
         },
         {
           name: "Redo",
           key: "Ctrl+Shift+Z",
           disabled: false,
-          onClick: () => {},
+          onClick: () => redo(),
         },
       ],
     },
