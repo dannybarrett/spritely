@@ -2,6 +2,11 @@ import { create } from "zustand";
 import { Frame, Layer, Pixel, Sprite } from "../types/sprite";
 import { invoke } from "@tauri-apps/api/core";
 
+interface History {
+  prev: Sprite[];
+  next: Sprite[];
+}
+
 export interface SpriteState {
   sprite: Sprite | undefined;
   setSprite: (newSprite: Sprite) => void;
@@ -11,8 +16,7 @@ export interface SpriteState {
   setColor: (newColor: Pixel) => void;
   altColor: Pixel;
   setAltColor: (newColor: Pixel) => void;
-  history: Sprite[];
-  historyIndex: number;
+  history: History;
   undo: () => void;
   redo: () => void;
   save: (path: string) => void;
@@ -43,21 +47,20 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     if (JSON.stringify(newSprite) === JSON.stringify(get().sprite)) {
       return;
     }
+    const current = get().sprite;
 
-    const newHistory = [...get().history];
+    const newPrev = [...get().history.prev];
 
-    if (get().historyIndex < get().history.length - 1) {
-      newHistory.splice(
-        get().historyIndex + 1,
-        get().history.length - get().historyIndex
-      );
+    if (current) {
+      newPrev.push(deepCopySprite(current));
     }
 
-    newHistory.push(deepCopySprite(newSprite));
     set({
+      history: {
+        prev: newPrev,
+        next: [],
+      },
       sprite: newSprite,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
     });
   },
   brush: "pencil",
@@ -66,36 +69,56 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
   setColor: (newColor: Pixel) => set({ color: newColor }),
   altColor: { r: 0, g: 0, b: 0, a: 255 },
   setAltColor: (newColor: Pixel) => set({ altColor: newColor }),
-  history: [],
-  historyIndex: -1,
+  history: {
+    prev: [],
+    next: [],
+  },
   undo: () => {
-    if (get().historyIndex <= 0) return;
-
-    let newHistoryIndex = 0;
-
-    if (get().historyIndex === -1) {
-      newHistoryIndex = history.length - 1;
-    } else if (get().historyIndex > 0) {
-      newHistoryIndex = get().historyIndex - 1;
+    if (get().history.prev.length === 0) {
+      return;
     }
 
+    const current = get().sprite;
+
+    const newPrev = [...get().history.prev];
+    let newNext = [...get().history.next];
+
+    if (current) {
+      newNext = [deepCopySprite(current), ...newNext];
+    }
+
+    const newSprite = newPrev.pop();
+
     set({
-      historyIndex: newHistoryIndex,
-      sprite: deepCopySprite(get().history[newHistoryIndex]),
+      history: {
+        prev: newPrev,
+        next: newNext,
+      },
+      sprite: newSprite,
     });
+
+    console.log(history, get().history);
   },
   redo: () => {
-    if (get().historyIndex >= get().history.length) return;
-
-    let newHistoryIndex = get().historyIndex;
-
-    if (get().historyIndex < get().history.length - 1) {
-      newHistoryIndex = get().historyIndex + 1;
+    if (get().history.next.length === 0) {
+      return;
     }
 
+    const current = get().sprite;
+
+    const newPrev = [...get().history.prev];
+    if (current) {
+      newPrev.push(deepCopySprite(current));
+    }
+    const newNext = [...get().history.next];
+    const newSprite = newNext.shift();
+
     set({
-      historyIndex: newHistoryIndex,
-      sprite: deepCopySprite(get().history[newHistoryIndex]),
+      history: {
+        prev: newPrev,
+        next: newNext,
+      },
+      sprite: newSprite,
     });
   },
   save: async (path: string) => {
@@ -105,11 +128,11 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     });
 
     if (response === "success") {
-      const newHistory: Sprite[] = [];
       set({
-        history: newHistory,
-        historyIndex: -1,
-        savePath: path,
+        history: {
+          prev: [],
+          next: [],
+        },
       });
     }
   },
