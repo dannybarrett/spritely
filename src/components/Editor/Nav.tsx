@@ -14,6 +14,7 @@ export default function Nav() {
   const undo = useSpriteStore((state: SpriteState) => state.undo);
   const redo = useSpriteStore((state: SpriteState) => state.redo);
   const saveSprite = useSpriteStore((state: SpriteState) => state.save);
+  const savePath = useSpriteStore((state: SpriteState) => state.savePath);
 
   async function handleInput(event: KeyboardEvent) {
     event.preventDefault();
@@ -33,18 +34,24 @@ export default function Nav() {
     }
 
     if (event.key === "s" && meta) {
-      const path = await save({
-        defaultPath: `${sprite?.name ?? "untitled"}.spr`,
-        filters: [
-          {
-            name: "Spritely Files",
-            extensions: ["spr"],
-          },
-        ],
-      });
+      if (!savePath) {
+        const path = await save({
+          defaultPath: `${sprite?.name ?? "untitled"}.spr`,
+          filters: [
+            {
+              name: "Spritely Files",
+              extensions: ["spr"],
+            },
+          ],
+        });
 
-      if (path) {
-        saveSprite(path);
+        if (path) {
+          console.log("saving to", path);
+          saveSprite(path);
+        }
+      } else {
+        console.log("saving to", savePath);
+        saveSprite(savePath || "");
       }
     }
   }

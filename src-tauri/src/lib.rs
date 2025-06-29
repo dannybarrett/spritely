@@ -2,12 +2,12 @@ use std::fs::File;
 use std::io::Write;
 
 #[tauri::command]
-fn save(path: &str, sprite: &str) -> Result<(), String> {
+fn save(path: &str, sprite: &str) -> Result<String, String> {
     let mut file = File::create(&path).map_err(|e| format!("Failed to create file at {}: {}", path, e))?;
 
     file.write_all(sprite.as_bytes()).map_err(|e| format!("Failed to write to file {}: {}", path, e))?;
 
-    Ok(())
+    Ok("success".to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

@@ -16,6 +16,8 @@ export interface SpriteState {
   undo: () => void;
   redo: () => void;
   save: (path: string) => void;
+  savePath: string | undefined;
+  setSavePath: (path: string) => void;
 }
 
 export function deepCopySprite(s: Sprite): Sprite {
@@ -101,5 +103,16 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
       path,
       sprite: JSON.stringify(get().sprite),
     });
+
+    if (response === "success") {
+      const newHistory: Sprite[] = [];
+      set({
+        history: newHistory,
+        historyIndex: -1,
+        savePath: path,
+      });
+    }
   },
+  savePath: undefined,
+  setSavePath: (path: string) => set({ savePath: path }),
 }));
