@@ -7,12 +7,15 @@ import {
   MenubarTrigger,
 } from "../ui/menubar";
 import { useEffect } from "react";
+import { save } from "@tauri-apps/plugin-dialog";
 
 export default function Nav() {
+  const sprite = useSpriteStore((state: SpriteState) => state.sprite);
   const undo = useSpriteStore((state: SpriteState) => state.undo);
   const redo = useSpriteStore((state: SpriteState) => state.redo);
+  const saveSprite = useSpriteStore((state: SpriteState) => state.save);
 
-  function handleInput(event: KeyboardEvent) {
+  async function handleInput(event: KeyboardEvent) {
     event.preventDefault();
     console.log("key", event.key);
     let meta = false;
@@ -27,6 +30,22 @@ export default function Nav() {
 
     if (meta && event.key === "z") {
       undo();
+    }
+
+    if (event.key === "s" && meta) {
+      const path = await save({
+        defaultPath: `${sprite?.name ?? "untitled"}.spr`,
+        filters: [
+          {
+            name: "Spritely Files",
+            extensions: ["spr"],
+          },
+        ],
+      });
+
+      if (path) {
+        saveSprite(path);
+      }
     }
   }
 
@@ -84,7 +103,7 @@ export default function Nav() {
         },
         {
           name: "Redo",
-          key: "Ctrl+Shift+Z",
+          key: "Ctrl+Y",
           disabled: false,
           onClick: () => redo(),
         },

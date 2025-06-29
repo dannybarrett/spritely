@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Frame, Layer, Pixel, Sprite } from "../types/sprite";
+import { invoke } from "@tauri-apps/api/core";
 
 export interface SpriteState {
   sprite: Sprite | undefined;
@@ -14,6 +15,7 @@ export interface SpriteState {
   historyIndex: number;
   undo: () => void;
   redo: () => void;
+  save: (path: string) => void;
 }
 
 export function deepCopySprite(s: Sprite): Sprite {
@@ -92,6 +94,12 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     set({
       historyIndex: newHistoryIndex,
       sprite: deepCopySprite(get().history[newHistoryIndex]),
+    });
+  },
+  save: async (path: string) => {
+    const response = await invoke("save", {
+      path,
+      sprite: JSON.stringify(get().sprite),
     });
   },
 }));
