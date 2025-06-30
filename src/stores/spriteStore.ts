@@ -21,6 +21,7 @@ export interface SpriteState {
   redo: () => void;
   save: (path: string) => void;
   savePath: string | undefined;
+  open: (path: string) => void;
 }
 
 export function deepCopySprite(s: Sprite): Sprite {
@@ -137,4 +138,22 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     }
   },
   savePath: undefined,
+  open: async (path: string) => {
+    const response = await invoke("open", {
+      path,
+    });
+
+    if ((response as string).startsWith("Error")) {
+      return console.error(response);
+    }
+
+    set({
+      savePath: path,
+      history: {
+        prev: [],
+        next: [],
+      },
+      sprite: JSON.parse(response as string),
+    });
+  },
 }));

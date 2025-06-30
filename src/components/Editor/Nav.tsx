@@ -7,7 +7,7 @@ import {
   MenubarTrigger,
 } from "../ui/menubar";
 import { useEffect } from "react";
-import { save } from "@tauri-apps/plugin-dialog";
+import { open, confirm, save } from "@tauri-apps/plugin-dialog";
 
 export default function Nav() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
@@ -15,6 +15,8 @@ export default function Nav() {
   const redo = useSpriteStore((state: SpriteState) => state.redo);
   const saveSprite = useSpriteStore((state: SpriteState) => state.save);
   const savePath = useSpriteStore((state: SpriteState) => state.savePath);
+  const openSprite = useSpriteStore((state: SpriteState) => state.open);
+  const history = useSpriteStore((state: SpriteState) => state.history);
 
   async function handleInput(event: KeyboardEvent) {
     event.preventDefault();
@@ -33,6 +35,7 @@ export default function Nav() {
       undo();
     }
 
+    // save
     if (event.key === "s" && meta) {
       let path;
 
@@ -51,6 +54,36 @@ export default function Nav() {
       path = savePath ?? path;
 
       saveSprite(path ?? "");
+    }
+
+    // open
+    if (event.key === "o" && meta) {
+      let canOpen = true;
+      if (sprite || history.prev.length > 0 || history.next.length > 0) {
+        canOpen = await confirm(
+          "All unsaved changes will be lost. Are you sure you want to continue?",
+          {
+            title: "Open sprite",
+            kind: "warning",
+          }
+        );
+      }
+
+      if (canOpen) {
+        const path = await open({
+          multiple: false,
+          filters: [
+            {
+              name: "Spritely Files",
+              extensions: ["spr"],
+            },
+          ],
+        });
+
+        if (path) {
+          openSprite(path);
+        }
+      }
     }
   }
 
