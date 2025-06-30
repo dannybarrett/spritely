@@ -9,7 +9,7 @@ interface History {
 
 export interface SpriteState {
   sprite: Sprite | undefined;
-  setSprite: (newSprite: Sprite) => void;
+  setSprite: (newSprite: Sprite | undefined) => void;
   brush: string;
   setBrush: (newBrush: string) => void;
   color: Pixel;
@@ -17,10 +17,12 @@ export interface SpriteState {
   altColor: Pixel;
   setAltColor: (newColor: Pixel) => void;
   history: History;
+  setHistory: (newHistory: History) => void;
   undo: () => void;
   redo: () => void;
   save: (path: string) => void;
   savePath: string | undefined;
+  setSavePath: (path: string | undefined) => void;
   open: (path: string) => void;
 }
 
@@ -43,7 +45,7 @@ export function deepCopySprite(s: Sprite): Sprite {
 
 export const useSpriteStore = create<SpriteState>((set, get) => ({
   sprite: undefined,
-  setSprite: (newSprite: Sprite) => {
+  setSprite: (newSprite: Sprite | undefined) => {
     if (JSON.stringify(newSprite) === JSON.stringify(get().sprite)) {
       return;
     }
@@ -73,6 +75,7 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     prev: [],
     next: [],
   },
+  setHistory: (newHistory: History) => set({ history: newHistory }),
   undo: () => {
     if (get().history.prev.length === 0) {
       return;
@@ -122,22 +125,25 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     });
   },
   save: async (path: string) => {
-    const response = await invoke("save", {
-      path,
-      sprite: JSON.stringify(get().sprite),
-    });
-
-    if (response === "success") {
-      set({
-        history: {
-          prev: [],
-          next: [],
-        },
-        savePath: path,
+    try {
+      await invoke("save", {
+        path,
+        sprite: JSON.stringify(get().sprite),
       });
+    } catch (error) {
+      console.error("Error saving file");
     }
+
+    set({
+      history: {
+        prev: [],
+        next: [],
+      },
+      savePath: path,
+    });
   },
   savePath: undefined,
+  setSavePath: (path: string | undefined) => set({ savePath: path }),
   open: async (path: string) => {
     const response = await invoke("open", {
       path,

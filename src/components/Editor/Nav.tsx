@@ -6,92 +6,151 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from "../ui/menubar";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { open, confirm, save } from "@tauri-apps/plugin-dialog";
+import { exit } from "@tauri-apps/plugin-process";
 
 export default function Nav() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
+  const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
   const undo = useSpriteStore((state: SpriteState) => state.undo);
   const redo = useSpriteStore((state: SpriteState) => state.redo);
   const saveSprite = useSpriteStore((state: SpriteState) => state.save);
   const savePath = useSpriteStore((state: SpriteState) => state.savePath);
+  const setSavePath = useSpriteStore((state: SpriteState) => state.setSavePath);
   const openSprite = useSpriteStore((state: SpriteState) => state.open);
   const history = useSpriteStore((state: SpriteState) => state.history);
+  const setHistory = useSpriteStore((state: SpriteState) => state.setHistory);
 
-  async function handleInput(event: KeyboardEvent) {
-    event.preventDefault();
-    console.log("key", event.key);
-    let meta = false;
-    let shift = false;
+  const confirmSavedAction = useCallback(async () => {
+    let isSaved = true;
 
-    if (event.metaKey || event.ctrlKey) meta = true;
-    if (event.shiftKey) shift = true;
-
-    if (meta && event.key === "y") {
-      redo();
+    if (sprite && (history.prev.length > 0 || history.next.length > 0)) {
+      isSaved = await confirm(
+        "All unsaved changes will be lost. Are you sure you want to continue?",
+        {
+          title: "Create new sprite",
+          kind: "warning",
+        }
+      );
     }
 
-    if (meta && event.key === "z") {
-      undo();
+    return isSaved;
+  }, [sprite, history]);
+
+  const saveSpriteAsAction = useCallback(async () => {
+    let path = await save({
+      defaultPath: `${sprite?.name ?? "untitled"}.spr`,
+      filters: [
+        {
+          name: "Spritely Files",
+          extensions: ["spr"],
+        },
+      ],
+    });
+
+    if (path) {
+      saveSprite(path);
     }
+  }, [sprite, saveSprite]);
 
-    // save
-    if (event.key === "s" && meta) {
-      let path;
+  const saveSpriteAction = useCallback(async () => {
+    if (!savePath) return saveSpriteAsAction();
+    saveSprite(savePath);
+  }, [saveSprite, savePath, saveSpriteAsAction]);
 
-      if (!savePath) {
-        path = await save({
-          defaultPath: `${sprite?.name ?? "untitled"}.spr`,
-          filters: [
-            {
-              name: "Spritely Files",
-              extensions: ["spr"],
-            },
-          ],
-        });
-      }
+  const newSpriteAction = useCallback(async () => {
+    let canCreate = await confirmSavedAction();
 
-      path = savePath ?? path;
-
-      saveSprite(path ?? "");
+    if (canCreate) {
+      setSprite(undefined);
+      setHistory({
+        prev: [],
+        next: [],
+      });
+      setSavePath(undefined);
     }
+  }, [confirmSavedAction, setSprite, setHistory, setSavePath]);
 
-    // open
-    if (event.key === "o" && meta) {
-      let canOpen = true;
-      if (sprite || history.prev.length > 0 || history.next.length > 0) {
-        canOpen = await confirm(
-          "All unsaved changes will be lost. Are you sure you want to continue?",
+  const openSpriteAction = useCallback(async () => {
+    let canOpen = await confirmSavedAction();
+
+    if (canOpen) {
+      const path = await open({
+        multiple: false,
+        filters: [
           {
-            title: "Open sprite",
-            kind: "warning",
-          }
-        );
+            name: "Spritely Files",
+            extensions: ["spr"],
+          },
+        ],
+      });
+
+      if (path) {
+        openSprite(path);
       }
+    }
+  }, [confirmSavedAction, openSprite]);
 
-      if (canOpen) {
-        const path = await open({
-          multiple: false,
-          filters: [
-            {
-              name: "Spritely Files",
-              extensions: ["spr"],
-            },
-          ],
-        });
+  const exitAction = useCallback(async () => {
+    const canExit = await confirmSavedAction();
 
-        if (path) {
-          openSprite(path);
+    if (canExit) {
+      await exit();
+    }
+  }, [confirmSavedAction]);
+
+  const handleInput = useCallback(
+    async (event: KeyboardEvent) => {
+      event.preventDefault();
+      console.log("key", event.key);
+      let meta = false;
+      let shift = false;
+
+      if (event.metaKey || event.ctrlKey) meta = true;
+      if (event.shiftKey) shift = true;
+
+      if (meta && event.key.toLowerCase() === "z") {
+        if (shift) {
+          redo();
+        } else {
+          undo();
         }
       }
-    }
-  }
+
+      // save
+      if (event.key.toLowerCase() === "s" && meta) {
+        if (shift) {
+          saveSpriteAsAction();
+        } else {
+          saveSpriteAction();
+        }
+      }
+
+      // open
+      if (event.key === "o" && meta) {
+        openSpriteAction();
+      }
+
+      if (event.key === "n" && meta) {
+        newSpriteAction();
+      }
+    },
+    [
+      undo,
+      redo,
+      saveSpriteAsAction,
+      saveSpriteAction,
+      openSpriteAction,
+      newSpriteAction,
+    ]
+  );
 
   useEffect(() => {
     document.addEventListener("keydown", handleInput);
 
     return () => document.removeEventListener("keydown", handleInput);
-  }, []);
+  }, [handleInput]);
 
   const menus = [
     {
@@ -101,21 +160,25 @@ export default function Nav() {
           name: "New",
           key: "Ctrl+N",
           disabled: false,
-          onClick: () => {},
+          onClick: () => newSpriteAction(),
         },
         {
           name: "Open",
           key: "Ctrl+O",
           disabled: false,
-          onClick: () => {
-            console.log("test");
-          },
+          onClick: () => openSpriteAction(),
         },
         {
           name: "Save",
           key: "Ctrl+S",
           disabled: false,
-          onClick: () => {},
+          onClick: () => saveSpriteAction(),
+        },
+        {
+          name: "Save as",
+          key: "Ctrl+Shift+S",
+          disabled: false,
+          onClick: () => saveSpriteAsAction(),
         },
         {
           name: "Export",
@@ -127,7 +190,7 @@ export default function Nav() {
           name: "Exit",
           key: "",
           disabled: false,
-          onClick: () => {},
+          onClick: async () => await exitAction(),
         },
       ],
     },
