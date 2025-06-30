@@ -34,8 +34,10 @@ export default function Nav() {
     }
 
     if (event.key === "s" && meta) {
+      let path;
+
       if (!savePath) {
-        const path = await save({
+        path = await save({
           defaultPath: `${sprite?.name ?? "untitled"}.spr`,
           filters: [
             {
@@ -44,15 +46,11 @@ export default function Nav() {
             },
           ],
         });
-
-        if (path) {
-          console.log("saving to", path);
-          saveSprite(path);
-        }
-      } else {
-        console.log("saving to", savePath);
-        saveSprite(savePath || "");
       }
+
+      path = savePath ?? path;
+
+      saveSprite(path ?? "");
     }
   }
 
