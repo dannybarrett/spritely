@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Frame, Layer, Pixel, Sprite } from "../types/sprite";
 import { invoke } from "@tauri-apps/api/core";
+import { getLayerComposite } from "@/lib/utils";
 
 interface History {
   prev: Sprite[];
@@ -30,6 +31,7 @@ export interface SpriteState {
   setCurrentLayer: (index: number) => void;
   addFrame: () => void;
   addLayer: () => void;
+  exportSprite: (path: string) => void;
 }
 
 export function deepCopySprite(s: Sprite): Sprite {
@@ -222,5 +224,22 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
 
     newSprite.frames.forEach(frame => frame.layers.push({ ...blankLayer }));
     set({ sprite: newSprite });
+  },
+  exportSprite: async (path: string) => {
+    if (!get().sprite) return;
+
+    const currentSprite = get().sprite as Sprite;
+    const pixels = getLayerComposite(
+      currentSprite.frames[get().currentFrame].layers,
+      currentSprite.width,
+      currentSprite.height
+    );
+
+    await invoke("export", {
+      path: path,
+      width: currentSprite.width,
+      height: currentSprite.height,
+      json: JSON.stringify(pixels),
+    });
   },
 }));

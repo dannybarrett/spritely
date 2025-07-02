@@ -21,6 +21,9 @@ export default function Nav() {
   const openSprite = useSpriteStore((state: SpriteState) => state.open);
   const history = useSpriteStore((state: SpriteState) => state.history);
   const setHistory = useSpriteStore((state: SpriteState) => state.setHistory);
+  const exportSprite = useSpriteStore(
+    (state: SpriteState) => state.exportSprite
+  );
 
   const confirmSavedAction = useCallback(async () => {
     let isSaved = true;
@@ -58,6 +61,27 @@ export default function Nav() {
     if (!savePath) return saveSpriteAsAction();
     saveSprite(savePath);
   }, [saveSprite, savePath, saveSpriteAsAction]);
+
+  const exportSpriteAsAction = useCallback(async () => {
+    let path = await save({
+      defaultPath: `${sprite?.name ?? "untitled"}.png`,
+      filters: [
+        {
+          name: "PNG Files",
+          extensions: ["png"],
+        },
+      ],
+    });
+
+    if (path) {
+      exportSprite(path);
+    }
+  }, [sprite, exportSprite]);
+
+  const exportSpriteAction = useCallback(async () => {
+    if (!savePath) return exportSpriteAsAction();
+    exportSprite(savePath);
+  }, [exportSprite, savePath, exportSpriteAsAction]);
 
   const newSpriteAction = useCallback(async () => {
     let canCreate = await confirmSavedAction();
@@ -127,6 +151,15 @@ export default function Nav() {
         }
       }
 
+      // export
+      if (event.key.toLowerCase() === "e" && meta) {
+        if (shift) {
+          exportSpriteAsAction();
+        } else {
+          exportSpriteAction();
+        }
+      }
+
       // open
       if (event.key === "o" && meta) {
         openSpriteAction();
@@ -184,7 +217,13 @@ export default function Nav() {
           name: "Export",
           key: "Ctrl+E",
           disabled: false,
-          onClick: () => {},
+          onClick: () => exportSpriteAction(),
+        },
+        {
+          name: "Export as",
+          key: "Ctrl+Shift+E",
+          disabled: false,
+          onClick: () => exportSpriteAsAction(),
         },
         {
           name: "Exit",
