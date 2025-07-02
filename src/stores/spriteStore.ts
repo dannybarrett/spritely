@@ -24,6 +24,8 @@ export interface SpriteState {
   savePath: string | undefined;
   setSavePath: (path: string | undefined) => void;
   open: (path: string) => void;
+  currentFrame: number;
+  currentLayer: number;
 }
 
 export function deepCopySprite(s: Sprite): Sprite {
@@ -162,4 +164,6 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
       sprite: JSON.parse(response as string),
     });
   },
+  currentFrame: 0,
+  currentLayer: 0,
 }));
