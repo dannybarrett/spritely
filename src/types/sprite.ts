@@ -12,6 +12,7 @@ export interface Frame {
 
 export interface Layer {
   pixels: Pixel[];
+  visible: boolean;
 }
 
 export interface Pixel {

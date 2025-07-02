@@ -1,33 +1,102 @@
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { Frame, Layer } from "@/types/sprite";
 import { useEffect, useRef } from "react";
+import { Button } from "../ui/button";
+import { Eye, EyeClosed, Plus } from "lucide-react";
 
 export default function Frames() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
+  const addFrame = useSpriteStore((state: SpriteState) => state.addFrame);
   if (!sprite) return "no sprite!";
 
   return (
-    <section className="p-2 border-t min-h-[120px]">
-      {sprite.frames.map((frame, index) => (
-        <FrameContainer key={`frame_${index}`} frame={frame} index={index} />
-      ))}
+    <section className="border-t min-h-[120px] grid grid-cols-[auto_1fr] gap-2">
+      <LayersPanel />
+      <div className="flex gap-2 py-2 pr-2">
+        {sprite.frames.map((frame, index) => (
+          <div className="grid grid-rows-[15px_auto]">
+            <p className="text-xs">{index + 1}</p>
+            <FrameContainer
+              key={`frame_${index}`}
+              frame={frame}
+              index={index}
+            />
+          </div>
+        ))}
+        <div className="grid grid-rows-[15px_auto]">
+          <p></p>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => addFrame()}
+            className="w-8 h-8"
+          >
+            <Plus />
+          </Button>
+        </div>
+      </div>
     </section>
   );
 }
 
 function FrameContainer({ frame, index }: { frame: Frame; index: number }) {
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       {frame.layers.map((layer, lIndex) => (
-        <LayerButton key={`frame_${index}_${lIndex}`} layer={layer} />
+        <LayerButton
+          key={`frame_${index}_${lIndex}`}
+          layer={layer}
+          frameIndex={index}
+          layerIndex={lIndex}
+        />
       ))}
     </div>
   );
 }
 
-function LayerButton({ layer }: { layer: Layer }) {
+function LayersPanel() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
-  const history = useSpriteStore((state: SpriteState) => state.history);
+  const addLayer = useSpriteStore((state: SpriteState) => state.addLayer);
+  if (!sprite) return "no sprite";
+
+  const layers = sprite.frames[0].layers;
+  return (
+    <div className="h-full border-r p-2 flex flex-col items-center gap-2">
+      <div className="h-[20px]" />
+      {layers.map((layer, index) => (
+        <div key={`layerp_${index}`}>
+          {layer.visible ? <Eye /> : <EyeClosed />}
+        </div>
+      ))}
+      <Button variant="outline" size="icon" onClick={() => addLayer()}>
+        <Plus />
+      </Button>
+    </div>
+  );
+}
+
+function LayerButton({
+  layer,
+  frameIndex,
+  layerIndex,
+}: {
+  layer: Layer;
+  frameIndex: number;
+  layerIndex: number;
+}) {
+  const sprite = useSpriteStore((state: SpriteState) => state.sprite);
+  const currentFrame = useSpriteStore(
+    (state: SpriteState) => state.currentFrame
+  );
+  const currentLayer = useSpriteStore(
+    (state: SpriteState) => state.currentLayer
+  );
+  const setCurrentFrame = useSpriteStore(
+    (state: SpriteState) => state.setCurrentFrame
+  );
+  const setCurrentLayer = useSpriteStore(
+    (state: SpriteState) => state.setCurrentLayer
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -91,6 +160,16 @@ function LayerButton({ layer }: { layer: Layer }) {
       width={32}
       height={32}
       className="bg-neutral-800"
+      style={{
+        border:
+          currentFrame === frameIndex && currentLayer === layerIndex
+            ? "1px solid indigo"
+            : "",
+      }}
+      onClick={() => {
+        setCurrentFrame(frameIndex);
+        setCurrentLayer(layerIndex);
+      }}
     ></canvas>
   );
 }

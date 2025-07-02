@@ -25,7 +25,11 @@ export interface SpriteState {
   setSavePath: (path: string | undefined) => void;
   open: (path: string) => void;
   currentFrame: number;
+  setCurrentFrame: (index: number) => void;
   currentLayer: number;
+  setCurrentLayer: (index: number) => void;
+  addFrame: () => void;
+  addLayer: () => void;
 }
 
 export function deepCopySprite(s: Sprite): Sprite {
@@ -165,5 +169,58 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     });
   },
   currentFrame: 0,
+  setCurrentFrame: (index: number) => set({ currentFrame: index }),
   currentLayer: 0,
+  setCurrentLayer: (index: number) => set({ currentLayer: index }),
+  addFrame: () => {
+    if (!get().sprite) return;
+
+    const currentSprite = get().sprite as Sprite;
+
+    const newSprite = deepCopySprite(currentSprite);
+    const layerCount = newSprite.frames[0].layers.length;
+    const blankLayer: Layer = {
+      pixels: Array.from(
+        { length: currentSprite.width * currentSprite.height },
+        () => ({
+          r: 0,
+          g: 0,
+          b: 0,
+          a: 0,
+        })
+      ),
+      visible: true,
+    };
+
+    const newFrame: Frame = {
+      layers: Array.from({ length: layerCount }, () => ({ ...blankLayer })),
+    };
+
+    newSprite.frames.push(newFrame);
+
+    set({
+      sprite: newSprite,
+    });
+  },
+  addLayer: () => {
+    if (!get().sprite) return;
+
+    const currentSprite = get().sprite as Sprite;
+    const newSprite = deepCopySprite(currentSprite);
+    const blankLayer: Layer = {
+      pixels: Array.from(
+        { length: currentSprite.width * currentSprite.height },
+        () => ({
+          r: 0,
+          g: 0,
+          b: 0,
+          a: 0,
+        })
+      ),
+      visible: true,
+    };
+
+    newSprite.frames.forEach(frame => frame.layers.push({ ...blankLayer }));
+    set({ sprite: newSprite });
+  },
 }));

@@ -53,6 +53,7 @@ export default function CreateSprite() {
                 { length: values.width * values.height },
                 () => ({ r: 0, g: 0, b: 0, a: 0 })
               ),
+              visible: true,
             },
           ],
         },
