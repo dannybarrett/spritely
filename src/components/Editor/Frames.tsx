@@ -38,6 +38,9 @@ function LayerButton({ layer }: { layer: Layer }) {
       return console.error("Couldn't render preview thumbnail");
     }
 
+    const aspectRatio = sprite.width / sprite.height;
+    canvas.width = canvas.height * aspectRatio;
+
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     const pixels = layer.pixels;
