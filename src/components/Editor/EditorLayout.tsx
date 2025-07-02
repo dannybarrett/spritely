@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import Brushes from "./Brushes";
 import Colors from "./Colors";
 import Nav from "./Nav";
+import Frames from "./Frames";
 
 export default function EditorLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,7 +10,10 @@ export default function EditorLayout({ children }: { children: ReactNode }) {
       <Nav />
       <div className="grid grid-cols-[auto_1fr_auto]">
         <Brushes />
-        {children}
+        <div className="grid grid-rows-[1fr_auto]">
+          {children}
+          <Frames />
+        </div>
         <Colors />
       </div>
     </div>

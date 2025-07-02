@@ -16,6 +16,9 @@ export default function Editor() {
   const currentFrame = useSpriteStore(
     (state: SpriteState) => state.currentFrame
   );
+  const currentLayer = useSpriteStore(
+    (state: SpriteState) => state.currentLayer
+  );
   const [spriteScale, setSpriteScale] = useState(16);
 
   function draw() {
@@ -62,14 +65,12 @@ export default function Editor() {
     }
 
     // draw sprite
-    // let pixels = sprite.frames[0].layers[0].pixels; // we will worry about frames and layers later
     const pixels = getLayerComposite(
       sprite.frames[currentFrame].layers,
       sprite.width,
       sprite.height
     );
 
-    console.log("pixels", pixels);
     const u8Pixels = new Uint8Array(pixels.length * 4);
 
     for (let i = 0; i < pixels.length; i++) {
@@ -133,7 +134,8 @@ export default function Editor() {
         const index = x + sprite.width * y;
         const newSprite = deepCopySprite(sprite);
 
-        newSprite.frames[0].layers[0].pixels[index] = newColor;
+        newSprite.frames[currentFrame].layers[currentLayer].pixels[index] =
+          newColor;
 
         setSprite(newSprite);
       }
