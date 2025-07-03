@@ -14,7 +14,8 @@
       {
         "title": "Spritely",
         "width": 1024,
-        "height": 576
+        "height": 576,
+        "maximized": true
       }
     ],
     "security": {
