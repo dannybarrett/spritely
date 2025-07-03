@@ -2,7 +2,7 @@ import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { Frame, Layer } from "@/types/sprite";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
-import { Eye, EyeClosed, Pause, Play, Plus, StopCircle } from "lucide-react";
+import { Eye, EyeClosed, Pause, Play, Plus } from "lucide-react";
 import { Input } from "../ui/input";
 
 export default function Frames() {
@@ -13,12 +13,14 @@ export default function Frames() {
   return (
     <section className="flex flex-col">
       <AnimationPlayer />
-      <div className="border-t min-h-[120px] grid grid-cols-[auto_1fr] gap-2">
+      <div className="border-t h-60 overflow-scroll grid grid-cols-[auto_1fr] gap-2">
         <LayersPanel />
         <div className="flex gap-2 py-2 pr-2">
           {sprite.frames.map((frame, index) => (
-            <div className="grid grid-rows-[15px_auto]">
-              <p className="text-xs">{index + 1}</p>
+            <div className="grid grid-rows-[34px_auto] gap-2">
+              <span className="text-xs font-mono text-center self-center">
+                {index + 1}
+              </span>
               <FrameContainer
                 key={`frame_${index}`}
                 frame={frame}
@@ -26,17 +28,14 @@ export default function Frames() {
               />
             </div>
           ))}
-          <div className="grid grid-rows-[15px_auto]">
-            <p></p>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => addFrame()}
-              className="w-8 h-8"
-            >
-              <Plus />
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => addFrame()}
+            className="w-8.25 h-8.25"
+          >
+            <Plus />
+          </Button>
         </div>
       </div>
     </section>
@@ -72,7 +71,7 @@ function AnimationPlayer() {
   }, [playing, currentFrame, setCurrentFrame, sprite, frameDuration]);
 
   return (
-    <div className="flex justify-center gap-2 border-t p-2">
+    <div className="flex justify-center border-t p-2">
       <Button variant="ghost" size="icon" onClick={() => setPlaying(!playing)}>
         {playing ? <Pause /> : <Play />}
       </Button>
@@ -111,11 +110,16 @@ function LayersPanel() {
   const layers = sprite.frames[0].layers;
   return (
     <div className="h-full border-r p-2 flex flex-col items-center gap-2">
-      <div className="h-[20px]" />
+      <div className="h-[34px]" />
       {layers.map((layer, index) => (
-        <div key={`layerp_${index}`}>
+        <Button
+          key={`layerp_${index}`}
+          size="icon"
+          variant="ghost"
+          style={{ width: "34px", height: "34px" }}
+        >
           {layer.visible ? <Eye /> : <EyeClosed />}
-        </div>
+        </Button>
       ))}
       <Button variant="outline" size="icon" onClick={() => addLayer()}>
         <Plus />
@@ -208,12 +212,12 @@ function LayerButton({
       ref={canvasRef}
       width={32}
       height={32}
-      className="bg-neutral-800"
+      className="bg-neutral-800 rounded-xs"
       style={{
         border:
           currentFrame === frameIndex && currentLayer === layerIndex
-            ? "1px solid indigo"
-            : "",
+            ? "1px solid orange"
+            : "1px solid transparent",
       }}
       onClick={() => {
         setCurrentFrame(frameIndex);
