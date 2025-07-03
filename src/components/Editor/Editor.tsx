@@ -4,7 +4,6 @@ import {
   SpriteState,
   useSpriteStore,
 } from "@/stores/spriteStore";
-import { Pixel } from "@/types/sprite";
 import { useEffect, useRef, useState } from "react";
 
 export default function Editor() {
@@ -149,7 +148,6 @@ export default function Editor() {
       }
 
       if (brush === "fill") {
-        console.log("fill");
         const oldColor =
           newSprite.frames[currentFrame].layers[currentLayer].pixels[index];
 
@@ -173,7 +171,7 @@ export default function Editor() {
     return () => window.removeEventListener("resize", draw);
   }, []);
 
-  useEffect(() => draw(), [canvasRef, sprite]);
+  useEffect(() => draw(), [canvasRef, sprite, currentFrame, currentLayer]);
 
   return (
     <div className="h-full w-full grid place-items-center">
