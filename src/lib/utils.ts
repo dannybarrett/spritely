@@ -1,4 +1,4 @@
-import { Layer, Pixel } from "@/types/sprite";
+import { Layer, Pixel, Sprite } from "@/types/sprite";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -57,4 +57,92 @@ export function getLayerComposite(
   }
 
   return bottom;
+}
+
+export async function fill({
+  pixels,
+  width,
+  height,
+  index,
+  oldColor,
+  newColor,
+}: {
+  pixels: Pixel[];
+  width: number;
+  height: number;
+  index: number;
+  oldColor: Pixel;
+  newColor: Pixel;
+}) {
+  const getIndex = (x: number, y: number) => y * width + x;
+  const areEqual = (current: Pixel, target: Pixel) => {
+    return (
+      current.r === target.r &&
+      current.g === target.g &&
+      current.b === target.b &&
+      current.a === target.a
+    );
+  };
+
+  if (
+    !areEqual(pixels[index], oldColor) ||
+    areEqual(pixels[index], newColor) ||
+    index < 0 ||
+    index > pixels.length - 1
+  ) {
+    return;
+  }
+
+  pixels[index] = { ...newColor };
+
+  const row = Math.floor(index / width);
+  const column = index % width;
+  const left = { x: column - 1, y: row };
+  const right = { x: column + 1, y: row };
+  const up = { x: column, y: row - 1 };
+  const down = { x: column, y: row + 1 };
+
+  if (left.x >= 0) {
+    fill({
+      pixels,
+      width,
+      height,
+      index: getIndex(left.x, left.y),
+      oldColor,
+      newColor,
+    });
+  }
+
+  if (right.x < width) {
+    fill({
+      pixels,
+      width,
+      height,
+      index: getIndex(right.x, right.y),
+      oldColor,
+      newColor,
+    });
+  }
+
+  if (up.y >= 0) {
+    fill({
+      pixels,
+      width,
+      height,
+      index: getIndex(up.x, up.y),
+      oldColor,
+      newColor,
+    });
+  }
+
+  if (down.y < height) {
+    fill({
+      pixels,
+      width,
+      height,
+      index: getIndex(down.x, down.y),
+      oldColor,
+      newColor,
+    });
+  }
 }

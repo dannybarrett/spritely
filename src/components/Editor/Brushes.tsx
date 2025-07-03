@@ -1,6 +1,7 @@
-import { Eraser, Pencil } from "lucide-react";
+import { Eraser, PaintBucket, Pencil } from "lucide-react";
 import { Button } from "../ui/button";
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
+import { useEffect } from "react";
 
 export default function Brushes() {
   const brush = useSpriteStore((state: SpriteState) => state.brush);
@@ -17,7 +18,26 @@ export default function Brushes() {
       key: "e",
       icon: <Eraser />,
     },
+    {
+      name: "fill",
+      key: "g",
+      icon: <PaintBucket />,
+    },
   ];
+
+  function handleInput(event: KeyboardEvent) {
+    const foundBrush = brushes.find(brush => brush.key === event.key);
+
+    if (foundBrush) {
+      setBrush(foundBrush.name);
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleInput);
+
+    return () => document.removeEventListener("keydown", handleInput);
+  }, []);
 
   return (
     <section className="border-r p-2">

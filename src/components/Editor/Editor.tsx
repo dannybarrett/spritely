@@ -1,4 +1,4 @@
-import { getLayerComposite } from "@/lib/utils";
+import { fill, getLayerComposite } from "@/lib/utils";
 import {
   deepCopySprite,
   SpriteState,
@@ -131,11 +131,10 @@ export default function Editor() {
       }
 
       const index = x + sprite.width * y;
+      let newColor = event.buttons === 1 ? color : altColor;
+      const newSprite = deepCopySprite(sprite);
 
       if (brush === "pencil") {
-        const newColor = event.buttons === 1 ? color : altColor;
-        const newSprite = deepCopySprite(sprite);
-
         newSprite.frames[currentFrame].layers[currentLayer].pixels[index] =
           newColor;
 
@@ -143,10 +142,25 @@ export default function Editor() {
       }
 
       if (brush === "eraser") {
-        const newColor: Pixel = { r: 0, g: 0, b: 0, a: 0 };
-        const newSprite = deepCopySprite(sprite);
+        newColor = { r: 0, g: 0, b: 0, a: 0 };
         newSprite.frames[currentFrame].layers[currentFrame].pixels[index] =
           newColor;
+        setSprite(newSprite);
+      }
+
+      if (brush === "fill") {
+        console.log("fill");
+        const oldColor =
+          newSprite.frames[currentFrame].layers[currentLayer].pixels[index];
+
+        fill({
+          pixels: newSprite.frames[currentFrame].layers[currentLayer].pixels,
+          width: newSprite.width,
+          height: newSprite.height,
+          index: index,
+          oldColor: oldColor,
+          newColor: newColor,
+        });
 
         setSprite(newSprite);
       }
