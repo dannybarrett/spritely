@@ -4,6 +4,7 @@ import {
   SpriteState,
   useSpriteStore,
 } from "@/stores/spriteStore";
+import { Pixel } from "@/types/sprite";
 import { useEffect, useRef, useState } from "react";
 
 export default function Editor() {
@@ -129,12 +130,22 @@ export default function Editor() {
         return;
       }
 
+      const index = x + sprite.width * y;
+
       if (brush === "pencil") {
         const newColor = event.buttons === 1 ? color : altColor;
-        const index = x + sprite.width * y;
         const newSprite = deepCopySprite(sprite);
 
         newSprite.frames[currentFrame].layers[currentLayer].pixels[index] =
+          newColor;
+
+        setSprite(newSprite);
+      }
+
+      if (brush === "eraser") {
+        const newColor: Pixel = { r: 0, g: 0, b: 0, a: 0 };
+        const newSprite = deepCopySprite(sprite);
+        newSprite.frames[currentFrame].layers[currentFrame].pixels[index] =
           newColor;
 
         setSprite(newSprite);
