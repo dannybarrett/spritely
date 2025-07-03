@@ -20,6 +20,7 @@ export default function Editor() {
     (state: SpriteState) => state.currentLayer
   );
   const [spriteScale, setSpriteScale] = useState(16);
+  const [canvasScale, setCanvasScale] = useState(1);
 
   function draw() {
     const canvas = canvasRef.current;
@@ -37,17 +38,18 @@ export default function Editor() {
 
     const parentSmallestDimension = Math.min(parent.width, parent.height);
     const spriteSmallestDimension = Math.min(sprite.width, sprite.height);
-    const scale =
-      Math.max(
-        1,
-        Math.floor(parentSmallestDimension / spriteSmallestDimension)
-      ) * 0.75;
+    const scale = Math.max(
+      1,
+      Math.floor(parentSmallestDimension / spriteSmallestDimension) * 0.95
+    );
     canvas.width = sprite.width * scale;
     canvas.height = sprite.height * scale;
     setSpriteScale(scale);
 
+    canvas.style.scale = canvasScale.toString();
+
     // draw grid
-    context.strokeStyle = "#CCCCCC";
+    context.strokeStyle = "#444444";
     context.lineWidth = 1;
 
     for (let x = 0; x < sprite.width; x++) {
@@ -120,8 +122,8 @@ export default function Editor() {
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
-      const x = Math.floor(mouseX / spriteScale);
-      const y = Math.floor(mouseY / spriteScale);
+      const x = Math.floor(mouseX / spriteScale / canvasScale);
+      const y = Math.floor(mouseY / spriteScale / canvasScale);
       // console.log(`Clicked at (${x}, ${y})`);
 
       // out of bounds
@@ -165,16 +167,41 @@ export default function Editor() {
     }
   }
 
+  function handleKeys(event: KeyboardEvent) {
+    console.log("event", event.key.toLowerCase());
+    switch (event.key.toLowerCase()) {
+      case "=":
+        if (canvasScale < 2) {
+          setCanvasScale(prev => prev + 0.1);
+        }
+        break;
+      case "-":
+        if (canvasScale > 0.5) {
+          setCanvasScale(prev => prev - 0.1);
+        }
+        break;
+    }
+  }
+
   useEffect(() => {
     window.addEventListener("resize", draw);
 
     return () => window.removeEventListener("resize", draw);
   }, []);
 
-  useEffect(() => draw(), [canvasRef, sprite, currentFrame, currentLayer]);
+  useEffect(
+    () => draw(),
+    [canvasRef, sprite, currentFrame, currentLayer, canvasScale]
+  );
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeys);
+
+    return () => document.removeEventListener("keydown", handleKeys);
+  }, []);
 
   return (
-    <div className="h-full w-full grid place-items-center">
+    <div className="h-full w-full grid place-items-center overflow-scroll">
       <canvas
         ref={canvasRef}
         width="196"
@@ -183,6 +210,9 @@ export default function Editor() {
         onMouseDown={handleInput}
         onMouseOver={handleInput}
         onMouseMove={handleInput}
+        style={{
+          scale: canvasScale,
+        }}
       ></canvas>
     </div>
   );
