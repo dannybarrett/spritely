@@ -29,6 +29,10 @@ export function getLayerComposite(
   }));
 
   for (const layer of layers) {
+    if (!layer.visible) {
+      continue;
+    }
+
     for (let i = 0; i < layer.pixels.length; i++) {
       const currentPixel = layer.pixels[i];
       const bottomPixel = bottom[i];

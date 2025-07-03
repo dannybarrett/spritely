@@ -31,6 +31,7 @@ export interface SpriteState {
   setCurrentLayer: (index: number) => void;
   addFrame: () => void;
   addLayer: () => void;
+  setLayerVisibility: (index: number, visibility: boolean) => void;
   exportSprite: (path: string) => void;
 }
 
@@ -223,6 +224,18 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     };
 
     newSprite.frames.forEach(frame => frame.layers.push({ ...blankLayer }));
+    set({ sprite: newSprite });
+  },
+  setLayerVisibility: (index: number, visibility: boolean) => {
+    if (!get().sprite) return;
+
+    const currentSpite = get().sprite as Sprite;
+    const newSprite = deepCopySprite(currentSpite);
+
+    newSprite.frames.forEach(frame => {
+      frame.layers[index].visible = visibility;
+    });
+
     set({ sprite: newSprite });
   },
   exportSprite: async (path: string) => {

@@ -2,7 +2,7 @@ import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { Frame, Layer } from "@/types/sprite";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
-import { Eye, EyeClosed, Pause, Play, Plus } from "lucide-react";
+import { Eye, EyeClosed, Pause, Play, Plus, Trash } from "lucide-react";
 import { Input } from "../ui/input";
 
 export default function Frames() {
@@ -105,6 +105,9 @@ function FrameContainer({ frame, index }: { frame: Frame; index: number }) {
 function LayersPanel() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
   const addLayer = useSpriteStore((state: SpriteState) => state.addLayer);
+  const setLayerVisibility = useSpriteStore(
+    (state: SpriteState) => state.setLayerVisibility
+  );
   if (!sprite) return "no sprite";
 
   const layers = sprite.frames[0].layers;
@@ -112,14 +115,19 @@ function LayersPanel() {
     <div className="h-full border-r p-2 flex flex-col items-center gap-2">
       <div className="h-[34px]" />
       {layers.map((layer, index) => (
-        <Button
-          key={`layerp_${index}`}
-          size="icon"
-          variant="ghost"
-          style={{ width: "34px", height: "34px" }}
-        >
-          {layer.visible ? <Eye /> : <EyeClosed />}
-        </Button>
+        <div className="flex" key={`layerp_${index}`}>
+          <Button
+            size="icon"
+            variant="ghost"
+            style={{ width: "34px", height: "34px" }}
+            onClick={() => setLayerVisibility(index, !layer.visible)}
+          >
+            {layer.visible ? <Eye /> : <EyeClosed />}
+          </Button>
+          <Button variant="ghost" size="icon" disabled={layers.length === 1}>
+            <Trash />
+          </Button>
+        </div>
       ))}
       <Button variant="outline" size="icon" onClick={() => addLayer()}>
         <Plus />
