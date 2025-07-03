@@ -1,8 +1,9 @@
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { Frame, Layer } from "@/types/sprite";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
-import { Eye, EyeClosed, Plus } from "lucide-react";
+import { Eye, EyeClosed, Pause, Play, Plus, StopCircle } from "lucide-react";
+import { Input } from "../ui/input";
 
 export default function Frames() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
@@ -10,32 +11,80 @@ export default function Frames() {
   if (!sprite) return "no sprite!";
 
   return (
-    <section className="border-t min-h-[120px] grid grid-cols-[auto_1fr] gap-2">
-      <LayersPanel />
-      <div className="flex gap-2 py-2 pr-2">
-        {sprite.frames.map((frame, index) => (
+    <section className="flex flex-col">
+      <AnimationPlayer />
+      <div className="border-t min-h-[120px] grid grid-cols-[auto_1fr] gap-2">
+        <LayersPanel />
+        <div className="flex gap-2 py-2 pr-2">
+          {sprite.frames.map((frame, index) => (
+            <div className="grid grid-rows-[15px_auto]">
+              <p className="text-xs">{index + 1}</p>
+              <FrameContainer
+                key={`frame_${index}`}
+                frame={frame}
+                index={index}
+              />
+            </div>
+          ))}
           <div className="grid grid-rows-[15px_auto]">
-            <p className="text-xs">{index + 1}</p>
-            <FrameContainer
-              key={`frame_${index}`}
-              frame={frame}
-              index={index}
-            />
+            <p></p>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => addFrame()}
+              className="w-8 h-8"
+            >
+              <Plus />
+            </Button>
           </div>
-        ))}
-        <div className="grid grid-rows-[15px_auto]">
-          <p></p>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => addFrame()}
-            className="w-8 h-8"
-          >
-            <Plus />
-          </Button>
         </div>
       </div>
     </section>
+  );
+}
+
+function AnimationPlayer() {
+  const sprite = useSpriteStore((state: SpriteState) => state.sprite);
+  const currentFrame = useSpriteStore(
+    (state: SpriteState) => state.currentFrame
+  );
+  const setCurrentFrame = useSpriteStore(
+    (state: SpriteState) => state.setCurrentFrame
+  );
+  const [playing, setPlaying] = useState(false);
+  const [frameDuration, setFrameDuration] = useState(300);
+
+  let interval: NodeJS.Timeout;
+
+  useEffect(() => {
+    if (playing && sprite) {
+      interval = setInterval(() => {
+        let newFrame = currentFrame + 1;
+        if (newFrame > sprite.frames.length - 1) {
+          newFrame -= sprite.frames.length;
+        }
+
+        setCurrentFrame(newFrame);
+      }, frameDuration);
+    }
+
+    return () => clearInterval(interval);
+  }, [playing, currentFrame, setCurrentFrame, sprite, frameDuration]);
+
+  return (
+    <div className="flex justify-center gap-2 border-t p-2">
+      <Button variant="ghost" size="icon" onClick={() => setPlaying(!playing)}>
+        {playing ? <Pause /> : <Play />}
+      </Button>
+      <Input
+        type="number"
+        defaultValue={frameDuration}
+        onChange={event => {
+          setFrameDuration(parseInt(event.target.value ?? 300));
+        }}
+        className="w-20"
+      />
+    </div>
   );
 }
 

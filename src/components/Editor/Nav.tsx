@@ -126,7 +126,6 @@ export default function Nav() {
 
   const handleInput = useCallback(
     async (event: KeyboardEvent) => {
-      event.preventDefault();
       console.log("key", event.key);
       let meta = false;
       let shift = false;
