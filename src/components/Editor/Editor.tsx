@@ -4,6 +4,7 @@ import {
   SpriteState,
   useSpriteStore,
 } from "@/stores/spriteStore";
+import { Pixel } from "@/types/sprite";
 import { useEffect, useRef, useState } from "react";
 
 export default function Editor() {
@@ -21,6 +22,8 @@ export default function Editor() {
   );
   const [spriteScale, setSpriteScale] = useState(16);
   const [canvasScale, setCanvasScale] = useState(1);
+
+  const lastMousePosition = useRef<{ x: number; y: number } | null>(null);
 
   function draw() {
     const canvas = canvasRef.current;
@@ -114,61 +117,154 @@ export default function Editor() {
     );
   }
 
-  function handleInput(event: React.MouseEvent) {
-    if (!sprite) return;
-    if (event.buttons === 1 || event.buttons === 2) {
-      const canvas = canvasRef.current;
-      if (!canvas) return console.error("Canvas not found");
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
-      const x = Math.floor(mouseX / spriteScale / canvasScale);
-      const y = Math.floor(mouseY / spriteScale / canvasScale);
-      // console.log(`Clicked at (${x}, ${y})`);
+  function getCoordinates(event: React.MouseEvent) {
+    const canvas = canvasRef.current;
+    if (!canvas || !sprite) return null;
 
-      // out of bounds
-      if (x < 0 || y < 0 || x >= sprite.width || y >= sprite.height) {
-        return;
-      }
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const x = Math.floor(mouseX / spriteScale / canvasScale);
+    const y = Math.floor(mouseY / spriteScale / canvasScale);
 
-      const index = x + sprite.width * y;
-      let newColor = event.buttons === 1 ? color : altColor;
-      const newSprite = deepCopySprite(sprite);
+    // out of bounds
+    if (x < 0 || y < 0 || x >= sprite.width || y >= sprite.height) {
+      return null;
+    }
 
-      if (brush === "pencil") {
-        newSprite.frames[currentFrame].layers[currentLayer].pixels[index] =
-          newColor;
+    return { x, y };
+  }
 
+  function updatePixel(pixels: Pixel[], index: number, color: Pixel) {
+    pixels[index] = brush === "eraser" ? { r: 0, g: 0, b: 0, a: 0 } : color;
+  }
+
+  function drawLine(
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    newColor: Pixel
+  ) {
+    if (!sprite) {
+      return;
+    }
+
+    const deltaX = Math.abs(endX - startX);
+    const deltaY = Math.abs(endY - startY);
+
+    const stepX = startX < endX ? 1 : -1;
+    const stepY = startY < endY ? 1 : -1;
+
+    // if deltaX > deltaY, more horizontal
+    // if deltaY > deltaX, more vertical
+    let errorTerm = deltaX - deltaY;
+
+    let currentX = startX;
+    let currentY = startY;
+
+    const newSprite = deepCopySprite(sprite);
+    const currentPixels =
+      newSprite.frames[currentFrame].layers[currentLayer].pixels;
+
+    while (true) {
+      const pixelIndex = currentX + sprite.width * currentY;
+
+      if (
+        currentX >= 0 &&
+        currentX < sprite.width &&
+        currentY >= 0 &&
+        currentY < currentPixels.length / newSprite.width
+      ) {
+        let colorToApply =
+          brush === "eraser" ? { r: 0, g: 0, b: 0, a: 0 } : newColor;
+        currentPixels[pixelIndex] = colorToApply;
         setSprite(newSprite);
-      }
 
-      if (brush === "eraser") {
-        newColor = { r: 0, g: 0, b: 0, a: 0 };
-        newSprite.frames[currentFrame].layers[currentFrame].pixels[index] =
-          newColor;
-        setSprite(newSprite);
-      }
+        if (currentX === endX && currentY === endY) {
+          break;
+        }
 
-      if (brush === "fill") {
-        const oldColor =
-          newSprite.frames[currentFrame].layers[currentLayer].pixels[index];
+        const twoTimesError = 2 * errorTerm;
 
-        fill({
-          pixels: newSprite.frames[currentFrame].layers[currentLayer].pixels,
-          width: newSprite.width,
-          height: newSprite.height,
-          index: index,
-          oldColor: oldColor,
-          newColor: newColor,
-        });
+        if (twoTimesError > -deltaY) {
+          errorTerm -= deltaY;
+          currentX += stepX;
+        }
 
-        setSprite(newSprite);
+        if (twoTimesError < deltaX) {
+          errorTerm += deltaX;
+          currentY += stepY;
+        }
       }
     }
   }
 
+  function handleMouseDown(event: React.MouseEvent) {
+    if (!sprite) return;
+
+    const coords = getCoordinates(event);
+    if (!coords) {
+      lastMousePosition.current = null;
+      return;
+    }
+
+    const { x, y } = coords;
+    const pixelIndex = x + sprite.width * y;
+    const newSprite = deepCopySprite(sprite);
+    const pixels = newSprite.frames[currentFrame].layers[currentLayer].pixels;
+    const newColor = event.buttons === 1 ? color : altColor;
+
+    if (brush === "pencil" || brush === "eraser") {
+      updatePixel(pixels, pixelIndex, newColor);
+      setSprite(newSprite);
+      lastMousePosition.current = { x, y };
+    } else if (brush === "fill") {
+      const oldColor = pixels[pixelIndex];
+      fill({
+        pixels,
+        width: sprite.width,
+        height: sprite.height,
+        index: pixelIndex,
+        oldColor,
+        newColor,
+      });
+      setSprite(newSprite);
+      lastMousePosition.current = null;
+    }
+  }
+
+  function handleMouseMove(event: React.MouseEvent) {
+    if (!sprite || !lastMousePosition.current) return;
+
+    if (event.buttons === 1 || event.buttons === 2) {
+      const coords = getCoordinates(event);
+      if (!coords) {
+        lastMousePosition.current = null;
+        return;
+      }
+
+      const { x: currentX, y: currentY } = coords;
+      const { x: lastX, y: lastY } = lastMousePosition.current || coords;
+
+      if (
+        (brush === "pencil" || brush === "eraser") &&
+        (currentX !== lastX || currentY !== lastY)
+      ) {
+        const newColor = event.buttons === 1 ? color : altColor;
+        drawLine(lastX, lastY, currentX, currentY, newColor);
+        lastMousePosition.current = { x: currentX, y: currentY };
+      } else if (brush === "fill") {
+        lastMousePosition.current = null;
+      }
+    }
+  }
+
+  function handleMouseUp() {
+    lastMousePosition.current = null;
+  }
+
   function handleKeys(event: KeyboardEvent) {
-    console.log("event", event.key.toLowerCase());
     switch (event.key.toLowerCase()) {
       case "=":
         if (canvasScale < 2) {
@@ -185,8 +281,12 @@ export default function Editor() {
 
   useEffect(() => {
     window.addEventListener("resize", draw);
+    document.addEventListener("mouseup", handleMouseUp);
 
-    return () => window.removeEventListener("resize", draw);
+    return () => {
+      window.removeEventListener("resize", draw);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
   }, []);
 
   useEffect(
@@ -207,9 +307,8 @@ export default function Editor() {
         width="196"
         height="196"
         className="border bg-neutral-800"
-        onMouseDown={handleInput}
-        onMouseOver={handleInput}
-        onMouseMove={handleInput}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
         style={{
           scale: canvasScale,
         }}
