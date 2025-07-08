@@ -1,16 +1,106 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
+import { Frame, Layer } from "@/lib/types";
+
+const formSchema = z.object({
+  name: z.string().min(1),
+  width: z.number().min(1),
+  height: z.number().min(1),
+});
+
 export default function CreateSpriteForm() {
+  const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "untitled",
+      width: 16,
+      height: 16,
+    },
+  });
+
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    const pixels = new Uint8ClampedArray(data.width * data.height * 4);
+    const layer: Layer = {
+      name: undefined,
+      pixels,
+    };
+    const frame: Frame = {
+      name: undefined,
+      layers: [layer],
+    };
+    const black = new Uint8ClampedArray([0, 0, 0, 255]);
+    const white = new Uint8ClampedArray([255, 255, 255, 255]);
+
+    setSprite({
+      name: data.name,
+      width: data.width,
+      height: data.height,
+      frames: [frame],
+      colors: [black, white],
+    });
+  }
+
   return (
-    <div>
-      <h1>Create Sprite</h1>
-      <form>
-        <label htmlFor="name">Name:</label>
-        <input type="text" id="name" name="name" />
-        <label htmlFor="width">Width:</label>
-        <input type="number" id="width" name="width" />
-        <label htmlFor="height">Height:</label>
-        <input type="number" id="height" name="height" />
-        <button type="submit">Create</button>
-      </form>
-    </div>
+    <main>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <h1>Create Sprite</h1>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Sprite Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="width"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Width</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="Sprite Width" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="height"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Height</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="Sprite Height" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit">Create Sprite</Button>
+        </form>
+      </Form>
+    </main>
   );
 }

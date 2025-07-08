@@ -40,6 +40,7 @@
 }
 
 :root {
+  --radius: 0.5rem;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -79,5 +80,13 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  main {
+    @apply flex flex-col items-center justify-center h-full w-full;
+  }
+
+  form {
+    @apply flex flex-col gap-4 items-center;
   }
 }

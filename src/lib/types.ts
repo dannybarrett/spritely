@@ -1,5 +1,7 @@
 export interface Sprite {
   name: string;
+  width: number;
+  height: number;
   frames: Frame[];
   colors: Uint8ClampedArray[];
 }
