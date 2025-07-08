@@ -86,6 +86,10 @@
     @apply flex flex-col items-center justify-center h-full w-full;
   }
 
+  canvas {
+    @apply bg-neutral-900;
+  }
+
   form {
     @apply flex flex-col gap-4 items-center;
   }
