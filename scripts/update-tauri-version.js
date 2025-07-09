@@ -1,6 +1,6 @@
 // scripts/update-tauri-version.js
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
 
 try {
   const packageJsonPath = path.resolve(__dirname, "..", "package.json");
