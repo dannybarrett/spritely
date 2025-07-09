@@ -11,6 +11,7 @@ import {
 } from "@/lib/utils";
 import Brushes from "./Brushes";
 import { Brush, BrushState, useBrushStore } from "@/stores/brushStore";
+import Colors from "./Colors";
 
 export default function Editor() {
   const [scale, setScale] = useState(1);
@@ -25,6 +26,8 @@ export default function Editor() {
     (state: SpriteState) => state.currentLayer,
   );
   const brush = useBrushStore((state: BrushState) => state.brush);
+  const color = useBrushStore((state: BrushState) => state.color);
+  const altColor = useBrushStore((state: BrushState) => state.altColor);
 
   if (!sprite) return <NoSpriteError />;
 
@@ -141,6 +144,7 @@ export default function Editor() {
 
     const newSprite = copySprite(sprite);
     const pixels = newSprite.frames[currentFrame].layers[currentLayer].pixels;
+    let newColor = event.buttons === 1 ? color : altColor;
 
     if (brush === Brush.FILL) {
       const oldColor = getColorAtIndex(pixels, index);
@@ -151,13 +155,11 @@ export default function Editor() {
         sprite.width,
         sprite.height,
         oldColor,
-        new Uint8ClampedArray([0, 0, 0, 255]),
+        newColor,
       );
     } else {
-      const newColor =
-        brush === Brush.ERASER
-          ? new Uint8ClampedArray([0, 0, 0, 0])
-          : new Uint8ClampedArray([0, 0, 0, 255]);
+      newColor =
+        brush === Brush.ERASER ? new Uint8ClampedArray([0, 0, 0, 0]) : newColor;
       setPixel(pixels, index, newColor);
     }
     setSprite(newSprite);
@@ -179,10 +181,9 @@ export default function Editor() {
 
     const { x: endX, y: endY } = coordinates;
     const { x: startX, y: startY } = lastMousePosition.current || coordinates;
-    const newColor =
-      brush === Brush.ERASER
-        ? new Uint8ClampedArray([0, 0, 0, 0])
-        : new Uint8ClampedArray([0, 0, 0, 255]);
+    let newColor = event.buttons === 1 ? color : altColor;
+    newColor =
+      brush === Brush.ERASER ? new Uint8ClampedArray([0, 0, 0, 0]) : newColor;
     drawLine(startX, startY, endX, endY, newColor);
     lastMousePosition.current = coordinates;
   }
@@ -241,7 +242,7 @@ export default function Editor() {
   }
 
   return (
-    <div className="grid grid-cols-[auto_1fr] w-full h-full">
+    <div className="grid grid-cols-[auto_1fr_auto] w-full h-full">
       <Brushes />
       <main>
         <canvas
@@ -252,6 +253,7 @@ export default function Editor() {
           onMouseMove={handleMouseMove}
         />
       </main>
+      <Colors />
     </div>
   );
 }
