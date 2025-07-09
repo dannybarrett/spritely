@@ -1,6 +1,11 @@
 // scripts/update-tauri-version.js
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Recreate __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 try {
   const packageJsonPath = path.resolve(__dirname, "..", "package.json");
@@ -15,21 +20,17 @@ try {
   );
   let tauriConfig = JSON.parse(fs.readFileSync(tauriConfigPath, "utf8"));
 
-  if (tauriConfig.package && tauriConfig.package.version) {
-    tauriConfig.package.version = newVersion;
-  } else {
-    // If 'package' or 'version' doesn't exist, create it
-    tauriConfig.package = { version: newVersion };
-  }
+  // Update the top-level version property
+  tauriConfig.version = newVersion;
 
   fs.writeFileSync(
     tauriConfigPath,
-    JSON.stringify(tauriConfig, null, 2),
+    JSON.stringify(tauriConfig, null, 2) + "\n", // Add a newline at the end
     "utf8"
   );
 
-  console.log(`Updated tauri.conf.json to version: ${newVersion}`);
+  console.log(`Updated tauri.conf.json to version ${newVersion}`);
 } catch (error) {
   console.error("Failed to update tauri.conf.json:", error);
-  process.exit(1); // Exit with error code
+  process.exit(1);
 }
