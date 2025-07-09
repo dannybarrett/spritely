@@ -7,10 +7,34 @@ import {
   MenubarTrigger,
 } from "./ui/menubar";
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
+import { save } from "@tauri-apps/plugin-dialog";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const sprite = useSpriteStore((state: SpriteState) => state.sprite);
   const undo = useSpriteStore((state: SpriteState) => state.undo);
   const redo = useSpriteStore((state: SpriteState) => state.redo);
+  const savePath = useSpriteStore((state: SpriteState) => state.savePath);
+  const saveSprite = useSpriteStore((state: SpriteState) => state.saveSprite);
+
+  async function saveAsAction() {
+    const path = await save({
+      defaultPath: `${sprite?.name}.spr`,
+      filters: [
+        {
+          name: "Spritely Files",
+          extensions: ["spr"],
+        },
+      ],
+    });
+
+    if (!path) return;
+    await saveSprite(path);
+  }
+
+  async function saveAction() {
+    if (!savePath) return await saveAsAction();
+    await saveSprite(savePath);
+  }
 
   const menus = [
     {
@@ -34,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Save",
-          action: () => console.log("save"),
+          action: async () => await saveAction(),
           key: {
             name: "s",
             modifiers: { meta: true, shift: false, alt: false },

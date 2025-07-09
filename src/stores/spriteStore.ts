@@ -1,6 +1,7 @@
 import { Sprite } from "@/lib/types";
 import { copySprite } from "@/lib/utils";
 import { create } from "zustand";
+import { invoke } from "@tauri-apps/api/core";
 
 export interface SpriteState {
   sprite: Sprite | undefined;
@@ -13,6 +14,9 @@ export interface SpriteState {
   nextHistory: Sprite[];
   undo: () => void;
   redo: () => void;
+  savePath: string;
+  setSavePath: (path: string) => void;
+  saveSprite: (path: string | undefined) => Promise<void>;
 }
 
 export const useSpriteStore = create<SpriteState>((set, get) => ({
@@ -72,5 +76,31 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
       prevHistory,
       nextHistory,
     });
+  },
+  savePath: "",
+  setSavePath: (path: string) => set({ savePath: path }),
+  saveSprite: async (path: string | undefined) => {
+    const sprite = get().sprite;
+    if (!sprite) return;
+
+    const savePath = get().savePath;
+    if (!savePath) {
+      if (!path) return;
+      set({ savePath: path });
+    }
+
+    const response = await invoke("save_sprite", {
+      sprite: JSON.stringify(sprite),
+      path: path ?? savePath,
+    });
+
+    console.log("save response", response);
+
+    if (response === "success") {
+      set({
+        prevHistory: [],
+        nextHistory: [],
+      });
+    }
   },
 }));
