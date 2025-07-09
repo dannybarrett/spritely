@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import NoSpriteError from "../NoSpriteError";
 import { compositeFrame } from "@/lib/composite";
 import { coordinatesToIndex, copySprite } from "@/lib/utils";
+import Brushes from "./Brushes";
 
 export default function Editor() {
   const [scale, setScale] = useState(1);
@@ -220,14 +221,17 @@ export default function Editor() {
   }
 
   return (
-    <main>
-      <canvas
-        width="64"
-        height="64"
-        ref={canvasRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-      />
-    </main>
+    <div className="grid grid-cols-[auto_1fr] w-full h-full">
+      <Brushes />
+      <main>
+        <canvas
+          width="64"
+          height="64"
+          ref={canvasRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+        />
+      </main>
+    </div>
   );
 }

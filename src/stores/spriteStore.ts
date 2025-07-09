@@ -66,9 +66,7 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     const prevHistory = [...get().prevHistory];
     prevHistory.push(currentSprite);
 
-    let nextSprite = nextHistory[nextHistory.length - 1];
-    nextHistory.pop();
-
+    let nextSprite = nextHistory.pop();
     set({
       sprite: nextSprite,
       prevHistory,
