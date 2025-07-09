@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import {
   Menubar,
   MenubarContent,
@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const savePath = useSpriteStore((state: SpriteState) => state.savePath);
   const saveSprite = useSpriteStore((state: SpriteState) => state.saveSprite);
 
-  async function saveAsAction() {
+  const saveAsAction = useCallback(async () => {
     const path = await save({
       defaultPath: `${sprite?.name}.spr`,
       filters: [
@@ -29,12 +29,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     if (!path) return;
     await saveSprite(path);
-  }
+  }, [sprite, saveSprite]);
 
-  async function saveAction() {
+  const saveAction = useCallback(async () => {
     if (!savePath) return await saveAsAction();
     await saveSprite(savePath);
-  }
+  }, [savePath, saveAsAction]);
 
   const menus = [
     {
