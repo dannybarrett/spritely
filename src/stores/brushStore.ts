@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export interface BrushStore {
+export interface BrushState {
   brush: string;
   setBrush: (brush: string) => void;
 }
@@ -11,7 +11,7 @@ export enum Brush {
   FILL = "Fill",
 }
 
-export const useBrushStore = create<BrushStore>((set) => ({
+export const useBrushStore = create<BrushState>((set) => ({
   brush: Brush.PENCIL,
   setBrush: (brush) => set({ brush }),
 }));

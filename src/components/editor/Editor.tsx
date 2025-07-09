@@ -2,8 +2,9 @@ import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { useCallback, useEffect, useRef, useState } from "react";
 import NoSpriteError from "../NoSpriteError";
 import { compositeFrame } from "@/lib/composite";
-import { coordinatesToIndex, copySprite } from "@/lib/utils";
+import { coordinatesToIndex, copySprite, fill, setPixel } from "@/lib/utils";
 import Brushes from "./Brushes";
+import { Brush, BrushState, useBrushStore } from "@/stores/brushStore";
 
 export default function Editor() {
   const [scale, setScale] = useState(1);
@@ -17,6 +18,7 @@ export default function Editor() {
   const currentLayer = useSpriteStore(
     (state: SpriteState) => state.currentLayer,
   );
+  const brush = useBrushStore((state: BrushState) => state.brush);
 
   if (!sprite) return <NoSpriteError />;
 
@@ -111,17 +113,6 @@ export default function Editor() {
     return () => document.removeEventListener("mouseup", handleMouseUp);
   }, []);
 
-  function setPixel(
-    pixels: Uint8ClampedArray,
-    index: number,
-    color: Uint8ClampedArray,
-  ) {
-    pixels[index] = color[0];
-    pixels[index + 1] = color[1];
-    pixels[index + 2] = color[2];
-    pixels[index + 3] = color[3];
-  }
-
   function getCoordinates(
     event: React.MouseEvent,
   ): { x: number; y: number } | undefined {
@@ -144,7 +135,30 @@ export default function Editor() {
 
     const newSprite = copySprite(sprite);
     const pixels = newSprite.frames[currentFrame].layers[currentLayer].pixels;
-    setPixel(pixels, index, new Uint8ClampedArray([0, 0, 0, 255]));
+
+    if (brush === Brush.FILL) {
+      const oldColor = new Uint8ClampedArray([
+        pixels[index],
+        pixels[index + 1],
+        pixels[index + 2],
+        pixels[index + 3],
+      ]);
+      fill(
+        pixels,
+        coordinates.x,
+        coordinates.y,
+        sprite.width,
+        sprite.height,
+        oldColor,
+        new Uint8ClampedArray([0, 0, 0, 255]),
+      );
+    } else {
+      const newColor =
+        brush === Brush.ERASER
+          ? new Uint8ClampedArray([0, 0, 0, 0])
+          : new Uint8ClampedArray([0, 0, 0, 255]);
+      setPixel(pixels, index, newColor);
+    }
     setSprite(newSprite);
     lastMousePosition.current = coordinates;
   }
@@ -155,7 +169,8 @@ export default function Editor() {
       !coordinates ||
       !sprite ||
       !lastMousePosition.current ||
-      (event.buttons !== 1 && event.buttons !== 2)
+      (event.buttons !== 1 && event.buttons !== 2) ||
+      brush === Brush.FILL
     ) {
       lastMousePosition.current = null;
       return;
@@ -163,7 +178,11 @@ export default function Editor() {
 
     const { x: endX, y: endY } = coordinates;
     const { x: startX, y: startY } = lastMousePosition.current || coordinates;
-    drawLine(startX, startY, endX, endY, new Uint8ClampedArray([0, 0, 0, 255]));
+    const newColor =
+      brush === Brush.ERASER
+        ? new Uint8ClampedArray([0, 0, 0, 0])
+        : new Uint8ClampedArray([0, 0, 0, 255]);
+    drawLine(startX, startY, endX, endY, newColor);
     lastMousePosition.current = coordinates;
   }
 
