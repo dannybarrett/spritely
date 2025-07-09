@@ -38,6 +38,18 @@ export function setPixel(
   pixels[index + 3] = color[3];
 }
 
+export function getColorAtIndex(
+  pixels: Uint8ClampedArray,
+  index: number,
+): Uint8ClampedArray {
+  return new Uint8ClampedArray([
+    pixels[index],
+    pixels[index + 1],
+    pixels[index + 2],
+    pixels[index + 3],
+  ]);
+}
+
 export function fill(
   pixels: Uint8ClampedArray,
   x: number,

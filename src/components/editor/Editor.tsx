@@ -2,7 +2,13 @@ import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { useCallback, useEffect, useRef, useState } from "react";
 import NoSpriteError from "../NoSpriteError";
 import { compositeFrame } from "@/lib/composite";
-import { coordinatesToIndex, copySprite, fill, setPixel } from "@/lib/utils";
+import {
+  coordinatesToIndex,
+  copySprite,
+  fill,
+  getColorAtIndex,
+  setPixel,
+} from "@/lib/utils";
 import Brushes from "./Brushes";
 import { Brush, BrushState, useBrushStore } from "@/stores/brushStore";
 
@@ -137,12 +143,7 @@ export default function Editor() {
     const pixels = newSprite.frames[currentFrame].layers[currentLayer].pixels;
 
     if (brush === Brush.FILL) {
-      const oldColor = new Uint8ClampedArray([
-        pixels[index],
-        pixels[index + 1],
-        pixels[index + 2],
-        pixels[index + 3],
-      ]);
+      const oldColor = getColorAtIndex(pixels, index);
       fill(
         pixels,
         coordinates.x,
