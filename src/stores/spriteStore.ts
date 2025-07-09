@@ -17,6 +17,7 @@ export interface SpriteState {
   savePath: string;
   setSavePath: (path: string) => void;
   saveSprite: (path: string | undefined) => Promise<void>;
+  openSprite: (path: string) => Promise<void>;
 }
 
 export const useSpriteStore = create<SpriteState>((set, get) => ({
@@ -89,12 +90,25 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
       set({ savePath: path });
     }
 
+    // Uint8ClampedArray is not serializable, so we need to convert it to a number array
+    let copy = copySprite(sprite);
+    let serializedSprite = JSON.parse(
+      JSON.stringify({
+        ...copy,
+        frames: copy.frames.map(frame => ({
+          ...frame,
+          layers: frame.layers.map(layer => ({
+            ...layer,
+            pixels: Array.from(layer.pixels),
+          })),
+        })),
+      })
+    );
+
     const response = await invoke("save_sprite", {
-      sprite: JSON.stringify(sprite),
+      sprite: JSON.stringify(serializedSprite),
       path: path ?? savePath,
     });
-
-    console.log("save response", response);
 
     if (response === "success") {
       set({
@@ -102,5 +116,17 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
         nextHistory: [],
       });
     }
+  },
+  openSprite: async (path: string) => {
+    const spriteString = await invoke("open_sprite", { path });
+    const sprite = JSON.parse(spriteString as string);
+
+    for (const frame of sprite.frames) {
+      for (const layer of frame.layers) {
+        layer.pixels = new Uint8ClampedArray(layer.pixels);
+      }
+    }
+
+    set({ sprite });
   },
 }));

@@ -7,7 +7,7 @@ import {
   MenubarTrigger,
 } from "./ui/menubar";
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
-import { save } from "@tauri-apps/plugin-dialog";
+import { confirm, save, open } from "@tauri-apps/plugin-dialog";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
@@ -15,16 +15,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const redo = useSpriteStore((state: SpriteState) => state.redo);
   const savePath = useSpriteStore((state: SpriteState) => state.savePath);
   const saveSprite = useSpriteStore((state: SpriteState) => state.saveSprite);
+  const openSprite = useSpriteStore((state: SpriteState) => state.openSprite);
+
+  const openAction = useCallback(async () => {
+    if (sprite) {
+      const confirmation = await confirm(
+        "Any unsaved changes will be lost. Are you sure you want to open a new file?"
+      );
+      if (!confirmation) return;
+    }
+
+    const path = await open({
+      multiple: false,
+      directory: false,
+      filters: [{ name: "Spritely Files", extensions: ["spr"] }],
+    });
+
+    if (!path) return;
+    await openSprite(path);
+  }, [sprite, openSprite]);
 
   const saveAsAction = useCallback(async () => {
     const path = await save({
       defaultPath: `${sprite?.name}.spr`,
-      filters: [
-        {
-          name: "Spritely Files",
-          extensions: ["spr"],
-        },
-      ],
+      filters: [{ name: "Spritely Files", extensions: ["spr"] }],
     });
 
     if (!path) return;
@@ -50,7 +64,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Open",
-          action: () => console.log("open"),
+          action: openAction,
           key: {
             name: "o",
             modifiers: { meta: true, shift: false, alt: false },
@@ -58,7 +72,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Save",
-          action: async () => await saveAction(),
+          action: saveAction,
           key: {
             name: "s",
             modifiers: { meta: true, shift: false, alt: false },
@@ -66,7 +80,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Save As",
-          action: () => console.log("save as"),
+          action: saveAsAction,
           key: {
             name: "s",
             modifiers: { meta: true, shift: true, alt: false },
@@ -144,11 +158,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen">
       <Menubar>
-        {menus.map((menu) => (
+        {menus.map(menu => (
           <MenubarMenu key={menu.name}>
             <MenubarTrigger>{menu.name}</MenubarTrigger>
             <MenubarContent>
-              {menu.items.map((item) => (
+              {menu.items.map(item => (
                 <MenubarItem key={item.name} onClick={item.action}>
                   {item.name}
                 </MenubarItem>
