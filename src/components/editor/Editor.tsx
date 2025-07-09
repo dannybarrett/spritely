@@ -1,5 +1,5 @@
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import NoSpriteError from "../NoSpriteError";
 import { compositeFrame } from "@/lib/composite";
 import { coordinatesToIndex, copySprite } from "@/lib/utils";
@@ -19,7 +19,7 @@ export default function Editor() {
 
   if (!sprite) return <NoSpriteError />;
 
-  function draw() {
+  const draw = useCallback(() => {
     if (!sprite) return console.error("Sprite is undefined");
 
     const canvas = canvasRef.current;
@@ -48,15 +48,15 @@ export default function Editor() {
 
     for (let i = 0; i < sprite.width; i++) {
       ctx.beginPath();
-      ctx.moveTo(i * scale, 0);
-      ctx.lineTo(i * scale, canvas.height);
+      ctx.moveTo(i * pixelSize, 0);
+      ctx.lineTo(i * pixelSize, canvas.height);
       ctx.stroke();
     }
 
     for (let i = 0; i < sprite.height; i++) {
       ctx.beginPath();
-      ctx.moveTo(0, i * scale);
-      ctx.lineTo(canvas.width, i * scale);
+      ctx.moveTo(0, i * pixelSize);
+      ctx.lineTo(canvas.width, i * pixelSize);
       ctx.stroke();
     }
 
@@ -91,10 +91,10 @@ export default function Editor() {
       sprite.height,
       0,
       0,
-      sprite.width * scale,
-      sprite.height * scale,
+      sprite.width * pixelSize,
+      sprite.height * pixelSize,
     );
-  }
+  }, [sprite, currentFrame, currentLayer, scale]);
 
   useEffect(() => {
     draw();
@@ -103,7 +103,7 @@ export default function Editor() {
   useEffect(() => {
     window.addEventListener("resize", draw);
     return () => window.removeEventListener("resize", draw);
-  }, []);
+  }, [draw]);
 
   useEffect(() => {
     document.addEventListener("mouseup", handleMouseUp);
