@@ -6,8 +6,12 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from "./ui/menubar";
+import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const undo = useSpriteStore((state: SpriteState) => state.undo);
+  const redo = useSpriteStore((state: SpriteState) => state.redo);
+
   const menus = [
     {
       name: "File",
@@ -67,7 +71,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       items: [
         {
           name: "Undo",
-          action: () => console.log("undo"),
+          action: () => undo(),
           key: {
             name: "z",
             modifiers: { meta: true, shift: false, alt: false },
@@ -75,7 +79,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Redo",
-          action: () => console.log("redo"),
+          action: () => redo(),
           key: {
             name: "z",
             modifiers: { meta: true, shift: true, alt: false },
