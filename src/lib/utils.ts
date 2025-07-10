@@ -9,9 +9,9 @@ export function cn(...inputs: ClassValue[]) {
 export function copySprite(sprite: Sprite): Sprite {
   return {
     ...sprite,
-    frames: sprite.frames.map((frame) => ({
+    frames: sprite.frames.map(frame => ({
       ...frame,
-      layers: frame.layers.map((layer) => ({
+      layers: frame.layers.map(layer => ({
         ...layer,
         pixels: new Uint8ClampedArray(layer.pixels),
       })),
@@ -22,7 +22,7 @@ export function copySprite(sprite: Sprite): Sprite {
 export function coordinatesToIndex(
   x: number,
   y: number,
-  width: number,
+  width: number
 ): number {
   return (y * width + x) * 4;
 }
@@ -30,7 +30,7 @@ export function coordinatesToIndex(
 export function setPixel(
   pixels: Uint8ClampedArray,
   index: number,
-  color: Uint8ClampedArray,
+  color: Uint8ClampedArray
 ) {
   pixels[index] = color[0];
   pixels[index + 1] = color[1];
@@ -40,7 +40,7 @@ export function setPixel(
 
 export function getColorAtIndex(
   pixels: Uint8ClampedArray,
-  index: number,
+  index: number
 ): Uint8ClampedArray {
   return new Uint8ClampedArray([
     pixels[index],
@@ -57,7 +57,7 @@ export function fill(
   width: number,
   height: number,
   oldColor: Uint8ClampedArray,
-  newColor: Uint8ClampedArray,
+  newColor: Uint8ClampedArray
 ) {
   const index = coordinatesToIndex(x, y, width);
 
@@ -86,4 +86,36 @@ export function fill(
     fill(pixels, x, y - 1, width, height, oldColor, newColor);
     fill(pixels, x, y + 1, width, height, oldColor, newColor);
   }
+}
+
+export function scaleSprite(sprite: Sprite, scale: number): Sprite {
+  const newSprite = copySprite(sprite);
+  const originalWidth = sprite.width;
+  const originalHeight = sprite.height;
+  const newWidth = originalWidth * scale;
+  const newHeight = originalHeight * scale;
+
+  for (const frame of newSprite.frames) {
+    for (const layer of frame.layers) {
+      const oldPixels = layer.pixels;
+      const newPixels = new Uint8ClampedArray(newWidth * newHeight * 4);
+
+      for (let y = 0; y < newHeight; y++) {
+        for (let x = 0; x < newWidth; x++) {
+          const oldX = Math.floor(x / scale);
+          const oldY = Math.floor(y / scale);
+          const oldIndex = coordinatesToIndex(oldX, oldY, originalWidth);
+          const newIndex = coordinatesToIndex(x, y, newWidth);
+          newPixels[newIndex] = oldPixels[oldIndex];
+          newPixels[newIndex + 1] = oldPixels[oldIndex + 1];
+          newPixels[newIndex + 2] = oldPixels[oldIndex + 2];
+          newPixels[newIndex + 3] = oldPixels[oldIndex + 3];
+        }
+      }
+
+      layer.pixels = newPixels;
+    }
+  }
+
+  return newSprite;
 }

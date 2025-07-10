@@ -14,6 +14,7 @@ import {
 } from "./ui/select";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { DialogFooter } from "./ui/dialog";
+import { scaleSprite } from "@/lib/utils";
 
 function getScaleValues(width: number, height: number): number[] {
   const scale = [1];
@@ -37,7 +38,8 @@ export default function ExportSpriteForm() {
   if (!sprite) return <NoSpriteError />;
 
   function handleSubmit() {
-    console.log("submit");
+    if (!sprite || !exportPath) return;
+    const scaledSprite = scaleSprite(sprite, scale);
   }
 
   return (
