@@ -22,7 +22,7 @@ try {
   let tauriConfig = JSON.parse(fs.readFileSync(tauriConfigPath, "utf8"));
 
   // Update the top-level version property
-  tauriConfig.package.version = newVersion;
+  tauriConfig.version = newVersion;
 
   fs.writeFileSync(
     tauriConfigPath,
@@ -32,7 +32,7 @@ try {
 
   const cargoPath = path.resolve(__dirname, "..", "src-tauri", "Cargo.toml");
   let cargo = parse(fs.readFileSync(cargoPath, "utf8"));
-  cargo.version = newVersion;
+  cargo.package.version = newVersion;
 
   fs.writeFileSync(
     cargoPath,
