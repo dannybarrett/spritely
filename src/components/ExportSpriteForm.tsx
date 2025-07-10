@@ -14,7 +14,8 @@ import {
 } from "./ui/select";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { DialogFooter } from "./ui/dialog";
-import { scaleSprite } from "@/lib/utils";
+import { invoke } from "@tauri-apps/api/core";
+import { Loader2 } from "lucide-react";
 
 function getScaleValues(width: number, height: number): number[] {
   const scale = [1];
@@ -33,13 +34,28 @@ function getScaleValues(width: number, height: number): number[] {
 export default function ExportSpriteForm() {
   const [exportPath, setExportPath] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
+  const [exporting, setExporting] = useState(false);
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
 
   if (!sprite) return <NoSpriteError />;
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!sprite || !exportPath) return;
-    const scaledSprite = scaleSprite(sprite, scale);
+
+    setExporting(true);
+    setTimeout(async () => {
+      try {
+        invoke("export_sprite", {
+          path: exportPath,
+          width: sprite.width,
+          height: sprite.height,
+          scaleFactor: scale,
+          pixels: sprite.frames[0].layers[0].pixels.buffer,
+        }).then(() => setExporting(false));
+      } catch (error) {
+        console.error("Export failed:", error);
+      }
+    }, 0);
   }
 
   return (
@@ -100,7 +116,15 @@ export default function ExportSpriteForm() {
         <DialogClose asChild>
           <Button variant="ghost">Cancel</Button>
         </DialogClose>
-        <Button onClick={handleSubmit}>Export</Button>
+        <Button onClick={handleSubmit} disabled={exporting}>
+          {exporting ? (
+            <div>
+              <Loader2 className="animate-spin" /> Exporting...
+            </div>
+          ) : (
+            "Export"
+          )}
+        </Button>
       </DialogFooter>
     </div>
   );

@@ -87,35 +87,3 @@ export function fill(
     fill(pixels, x, y + 1, width, height, oldColor, newColor);
   }
 }
-
-export function scaleSprite(sprite: Sprite, scale: number): Sprite {
-  const newSprite = copySprite(sprite);
-  const originalWidth = sprite.width;
-  const originalHeight = sprite.height;
-  const newWidth = originalWidth * scale;
-  const newHeight = originalHeight * scale;
-
-  for (const frame of newSprite.frames) {
-    for (const layer of frame.layers) {
-      const oldPixels = layer.pixels;
-      const newPixels = new Uint8ClampedArray(newWidth * newHeight * 4);
-
-      for (let y = 0; y < newHeight; y++) {
-        for (let x = 0; x < newWidth; x++) {
-          const oldX = Math.floor(x / scale);
-          const oldY = Math.floor(y / scale);
-          const oldIndex = coordinatesToIndex(oldX, oldY, originalWidth);
-          const newIndex = coordinatesToIndex(x, y, newWidth);
-          newPixels[newIndex] = oldPixels[oldIndex];
-          newPixels[newIndex + 1] = oldPixels[oldIndex + 1];
-          newPixels[newIndex + 2] = oldPixels[oldIndex + 2];
-          newPixels[newIndex + 3] = oldPixels[oldIndex + 3];
-        }
-      }
-
-      layer.pixels = newPixels;
-    }
-  }
-
-  return newSprite;
-}
