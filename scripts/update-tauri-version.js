@@ -29,7 +29,19 @@ try {
     "utf8"
   );
 
-  console.log(`Updated tauri.conf.json to version ${newVersion}`);
+  const cargoPath = path.resolve(__dirname, "..", "src-tauri", "Cargo.toml");
+  let cargo = JSON.parse(fs.readFileSync(cargoPath, "utf8"));
+  cargo.version = newVersion;
+
+  fs.writeFileSync(
+    cargoPath,
+    JSON.stringify(cargo, null, 2) + "\n", // Add a newline at the end
+    "utf8"
+  );
+
+  console.log(
+    `Updated tauri.conf.json and Cargo.toml to version ${newVersion}`
+  );
 } catch (error) {
   console.error("Failed to update tauri.conf.json:", error);
   process.exit(1);
