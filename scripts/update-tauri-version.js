@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse, stringify } from "smol-toml";
 
 // Recreate __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -30,12 +31,12 @@ try {
   );
 
   const cargoPath = path.resolve(__dirname, "..", "src-tauri", "Cargo.toml");
-  let cargo = JSON.parse(fs.readFileSync(cargoPath, "utf8"));
+  let cargo = parse(fs.readFileSync(cargoPath, "utf8"));
   cargo.version = newVersion;
 
   fs.writeFileSync(
     cargoPath,
-    JSON.stringify(cargo, null, 2) + "\n", // Add a newline at the end
+    stringify(cargo) + "\n", // Add a newline at the end
     "utf8"
   );
 
