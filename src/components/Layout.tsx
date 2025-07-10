@@ -8,8 +8,21 @@ import {
 } from "./ui/menubar";
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { confirm, save, open } from "@tauri-apps/plugin-dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { useState } from "react";
+import ExportSpriteForm from "./ExportSpriteForm";
+import { Button } from "./ui/button";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
   const undo = useSpriteStore((state: SpriteState) => state.undo);
   const redo = useSpriteStore((state: SpriteState) => state.redo);
@@ -88,7 +101,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Export",
-          action: () => console.log("export"),
+          action: () => setDialogOpen(true),
           key: {
             name: "e",
             modifiers: { meta: true, shift: false, alt: false },
@@ -157,6 +170,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col h-screen">
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Export Sprite</DialogTitle>
+            <DialogDescription>
+              Choose a format to export your sprite.
+            </DialogDescription>
+          </DialogHeader>
+          <ExportSpriteForm />
+        </DialogContent>
+      </Dialog>
       <Menubar>
         {menus.map(menu => (
           <MenubarMenu key={menu.name}>
