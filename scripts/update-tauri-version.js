@@ -22,7 +22,7 @@ try {
   let tauriConfig = JSON.parse(fs.readFileSync(tauriConfigPath, "utf8"));
 
   // Update the top-level version property
-  tauriConfig.version = newVersion;
+  tauriConfig.package.version = newVersion;
 
   fs.writeFileSync(
     tauriConfigPath,
