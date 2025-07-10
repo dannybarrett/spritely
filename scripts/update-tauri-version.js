@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse, stringify } from "smol-toml";
 
 // Recreate __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +30,19 @@ try {
     "utf8"
   );
 
-  console.log(`Updated tauri.conf.json to version ${newVersion}`);
+  const cargoPath = path.resolve(__dirname, "..", "src-tauri", "Cargo.toml");
+  let cargo = parse(fs.readFileSync(cargoPath, "utf8"));
+  cargo.package.version = newVersion;
+
+  fs.writeFileSync(
+    cargoPath,
+    stringify(cargo) + "\n", // Add a newline at the end
+    "utf8"
+  );
+
+  console.log(
+    `Updated tauri.conf.json and Cargo.toml to version ${newVersion}`
+  );
 } catch (error) {
   console.error("Failed to update tauri.conf.json:", error);
   process.exit(1);
