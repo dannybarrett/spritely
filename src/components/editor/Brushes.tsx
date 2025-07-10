@@ -4,8 +4,8 @@ import { Button } from "../ui/button";
 import { useEffect } from "react";
 
 export default function Brushes() {
-  const brush = useBrushStore((state) => state.brush);
-  const setBrush = useBrushStore((state) => state.setBrush);
+  const brush = useBrushStore(state => state.brush);
+  const setBrush = useBrushStore(state => state.setBrush);
 
   const brushes = [
     {
@@ -26,8 +26,12 @@ export default function Brushes() {
   ];
 
   function handleInput(event: KeyboardEvent) {
+    const { ctrlKey, metaKey } = event;
+
+    if (ctrlKey || metaKey) return;
+
     const key = event.key.toLowerCase();
-    const brush = brushes.find((b) => b.key === key);
+    const brush = brushes.find(b => b.key === key);
     if (brush) setBrush(brush.name);
   }
 
@@ -38,13 +42,15 @@ export default function Brushes() {
 
   return (
     <div className="flex flex-col gap-2 items-center border-r p-2">
-      {brushes.map((b) => (
+      {brushes.map(b => (
         <Button
           key={b.name}
           variant="outline"
           size="icon"
           onClick={() => setBrush(b.name)}
-          className={`${brush === b.name ? "bg-neutral-700 hover:bg-neutral-700" : ""}`}
+          className={`${
+            brush === b.name ? "bg-neutral-700 hover:bg-neutral-700" : ""
+          }`}
         >
           {b.icon}
         </Button>
