@@ -118,7 +118,7 @@ export default function ExportSpriteForm() {
         </DialogClose>
         <Button onClick={handleSubmit} disabled={exporting}>
           {exporting ? (
-            <div>
+            <div className="flex items-center gap-2">
               <Loader2 className="animate-spin" /> Exporting...
             </div>
           ) : (
