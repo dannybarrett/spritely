@@ -9,9 +9,9 @@ export function cn(...inputs: ClassValue[]) {
 export function copySprite(sprite: Sprite): Sprite {
   return {
     ...sprite,
-    frames: sprite.frames.map((frame) => ({
+    frames: sprite.frames.map(frame => ({
       ...frame,
-      layers: frame.layers.map((layer) => ({
+      layers: frame.layers.map(layer => ({
         ...layer,
         pixels: new Uint8ClampedArray(layer.pixels),
       })),
@@ -22,7 +22,7 @@ export function copySprite(sprite: Sprite): Sprite {
 export function coordinatesToIndex(
   x: number,
   y: number,
-  width: number,
+  width: number
 ): number {
   return (y * width + x) * 4;
 }
@@ -30,7 +30,7 @@ export function coordinatesToIndex(
 export function setPixel(
   pixels: Uint8ClampedArray,
   index: number,
-  color: Uint8ClampedArray,
+  color: Uint8ClampedArray
 ) {
   pixels[index] = color[0];
   pixels[index + 1] = color[1];
@@ -40,7 +40,7 @@ export function setPixel(
 
 export function getColorAtIndex(
   pixels: Uint8ClampedArray,
-  index: number,
+  index: number
 ): Uint8ClampedArray {
   return new Uint8ClampedArray([
     pixels[index],
@@ -57,7 +57,7 @@ export function fill(
   width: number,
   height: number,
   oldColor: Uint8ClampedArray,
-  newColor: Uint8ClampedArray,
+  newColor: Uint8ClampedArray
 ) {
   const index = coordinatesToIndex(x, y, width);
 
