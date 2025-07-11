@@ -111,7 +111,7 @@ export default function Editor() {
 
   useEffect(() => {
     draw();
-  }, [sprite, canvasRef.current]);
+  }, [sprite, canvasRef.current, currentFrame, currentLayer]);
 
   useEffect(() => {
     window.addEventListener("resize", draw);

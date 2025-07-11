@@ -29,17 +29,12 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
 
     if (oldSprite) {
       oldSprite = copySprite(oldSprite);
-      const prevHistory = get().prevHistory;
+      const prevHistory = [...get().prevHistory];
       prevHistory.push(oldSprite);
       set({ prevHistory });
     }
 
-    const nextHistory = get().nextHistory;
-
-    if (nextHistory.length > 0) {
-      set({ nextHistory: [] });
-    }
-    set({ sprite });
+    set({ sprite, nextHistory: [] });
   },
   currentFrame: 0,
   setCurrentFrame: (frame: number) => set({ currentFrame: frame }),
@@ -57,6 +52,18 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
 
     let oldSprite = prevHistory.pop();
 
+    if (!oldSprite) return;
+    if (get().currentFrame >= oldSprite.frames.length) {
+      set({ currentFrame: oldSprite.frames.length - 1 });
+    }
+
+    if (
+      get().currentLayer >= oldSprite.frames[get().currentFrame].layers.length
+    ) {
+      set({
+        currentLayer: oldSprite.frames[get().currentFrame].layers.length - 1,
+      });
+    }
     set({
       sprite: oldSprite,
       prevHistory,
@@ -72,6 +79,18 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
     prevHistory.push(currentSprite);
 
     let nextSprite = nextHistory.pop();
+    if (!nextSprite) return;
+    if (get().currentFrame >= nextSprite.frames.length) {
+      set({ currentFrame: nextSprite.frames.length - 1 });
+    }
+
+    if (
+      get().currentLayer >= nextSprite.frames[get().currentFrame].layers.length
+    ) {
+      set({
+        currentLayer: nextSprite.frames[get().currentFrame].layers.length - 1,
+      });
+    }
     set({
       sprite: nextSprite,
       prevHistory,
