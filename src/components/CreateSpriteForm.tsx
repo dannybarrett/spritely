@@ -16,8 +16,8 @@ import { Frame, Layer } from "@/lib/types";
 
 const formSchema = z.object({
   name: z.string().min(1),
-  width: z.number().min(1),
-  height: z.number().min(1),
+  width: z.string().min(1),
+  height: z.string().min(1),
 });
 
 export default function CreateSpriteForm() {
@@ -27,16 +27,19 @@ export default function CreateSpriteForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "untitled",
-      width: 16,
-      height: 16,
+      width: "16",
+      height: "16",
     },
   });
 
   function onSubmit(data: z.infer<typeof formSchema>) {
-    const pixels = new Uint8ClampedArray(data.width * data.height * 4);
+    const pixels = new Uint8ClampedArray(
+      parseInt(data.width) * parseInt(data.height) * 4
+    );
     const layer: Layer = {
       name: undefined,
       pixels,
+      visible: true,
     };
     const frame: Frame = {
       name: undefined,
@@ -47,8 +50,8 @@ export default function CreateSpriteForm() {
 
     setSprite({
       name: data.name,
-      width: data.width,
-      height: data.height,
+      width: parseInt(data.width),
+      height: parseInt(data.height),
       frames: [frame],
       colors: [black, white],
     });
@@ -79,7 +82,7 @@ export default function CreateSpriteForm() {
               <FormItem>
                 <FormLabel>Width</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Sprite Width" {...field} />
+                  <Input placeholder="Sprite Width" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -92,7 +95,7 @@ export default function CreateSpriteForm() {
               <FormItem>
                 <FormLabel>Height</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Sprite Height" {...field} />
+                  <Input placeholder="Sprite Height" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
