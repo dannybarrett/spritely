@@ -1,6 +1,6 @@
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import NoSpriteError from "../NoSpriteError";
-import { Layer } from "@/lib/types";
+import { Layer, Sprite } from "@/lib/types";
 import { Button } from "../ui/button";
 import {
   ArrowLeft,
@@ -9,7 +9,6 @@ import {
   ChevronLast,
   Eye,
   EyeClosed,
-  EyeOff,
   Pause,
   Play,
   Plus,
@@ -18,6 +17,7 @@ import {
 import { copySprite } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 export default function Animation() {
   const [animationDuration, setAnimationDuration] = useState(300);
@@ -59,6 +59,31 @@ export default function Animation() {
       frame.layers.splice(index, 1);
     });
     setSprite(newSprite);
+  }
+
+  function reorderFrame(startIndex: number, endIndex: number) {
+    if (!sprite) return;
+
+    const newSprite = copySprite(sprite);
+    const startFrame = newSprite.frames[startIndex];
+    const endFrame = newSprite.frames[endIndex];
+    newSprite.frames[startIndex] = endFrame;
+    newSprite.frames[endIndex] = startFrame;
+    setSprite(newSprite);
+  }
+
+  const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
+    userSelect: "none",
+    background: isDragging ? "hsl(0 0% 8%)" : "hsl(0 0% 4%)",
+
+    // styles we need to apply on draggables
+    ...draggableStyle,
+  });
+
+  function onDragFrameEnd(result: any) {
+    if (!result.destination) return;
+
+    reorderFrame(result.source.index, result.destination.index);
   }
 
   function addFrame() {
@@ -130,28 +155,53 @@ export default function Animation() {
           </div>
         </aside>
         <div className="flex flex-col w-full">
-          <div className="flex items-center border-b">
-            {sprite.frames.map((frame, index) => (
-              <Button
-                key={`frame-controller-${index}`}
-                className="font-mono w-[40px] h-full grid place-items-center disabled:opacity-100"
-                variant="ghost"
-                size="icon"
-                disabled
-              >
-                {index + 1}
-              </Button>
-            ))}
-            <div className="p-2">
-              <Button
-                variant="outline"
-                className="text-xs"
-                onClick={() => addFrame()}
-              >
-                <Plus /> Add Frame
+          <DragDropContext onDragEnd={onDragFrameEnd}>
+            <div className="flex items-center gap-1 py-1.5 border-b">
+              <Droppable droppableId="frames" direction="horizontal">
+                {provided => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="flex overflow-auto"
+                  >
+                    {sprite.frames.map((_, index) => (
+                      <Draggable
+                        key={`frame-${index}`}
+                        draggableId={`frame-${index}`}
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            ref={provided.innerRef}
+                            style={getItemStyle(
+                              snapshot.isDragging,
+                              provided.draggableProps.style
+                            )}
+                            className="w-fit"
+                          >
+                            <Button
+                              disabled
+                              variant="ghost"
+                              size="icon"
+                              className="font-mono w-[40px] h-[40px] grid place-items-center disabled:opacity-100"
+                            >
+                              {index + 1}
+                            </Button>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+              <Button onClick={addFrame} variant="outline">
+                Add Frame
               </Button>
             </div>
-          </div>
+          </DragDropContext>
           <div className="flex">
             {sprite.frames.map((frame, frameIndex) => (
               <div key={`frame-${frameIndex}`} className="w-[40px] h-full">
