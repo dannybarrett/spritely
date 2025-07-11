@@ -5,9 +5,6 @@ export function compositeFrame(
   width: number,
   height: number
 ): Uint8ClampedArray {
-  // implement later
-  // return frame.layers[0].pixels;
-
   const bottom = new Uint8ClampedArray(width * height * 4);
 
   for (const layer of frame.layers) {
