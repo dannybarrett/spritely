@@ -10,16 +10,13 @@ import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { confirm, save, open } from "@tauri-apps/plugin-dialog";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
 import { useState } from "react";
 import ExportSpriteForm from "./ExportSpriteForm";
-import { Button } from "./ui/button";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [dialogOpen, setDialogOpen] = useState(false);

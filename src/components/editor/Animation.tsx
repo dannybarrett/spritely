@@ -30,8 +30,10 @@ export default function Animation() {
     if (!sprite) return;
 
     const newSprite = copySprite(sprite);
-    newSprite.frames[0].layers[index].visible =
-      !newSprite.frames[0].layers[index].visible;
+    const newVisibility = !sprite.frames[0].layers[index].visible;
+    newSprite.frames.map(frame => {
+      frame.layers[index].visible = newVisibility;
+    });
     setSprite(newSprite);
   }
 
