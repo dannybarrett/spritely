@@ -12,6 +12,7 @@ import {
 import Brushes from "./Brushes";
 import { Brush, BrushState, useBrushStore } from "@/stores/brushStore";
 import Colors from "./Colors";
+import Animation from "./Animation";
 
 export default function Editor() {
   const [scale, setScale] = useState(1);
@@ -20,10 +21,10 @@ export default function Editor() {
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
   const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
   const currentFrame = useSpriteStore(
-    (state: SpriteState) => state.currentFrame,
+    (state: SpriteState) => state.currentFrame
   );
   const currentLayer = useSpriteStore(
-    (state: SpriteState) => state.currentLayer,
+    (state: SpriteState) => state.currentLayer
   );
   const brush = useBrushStore((state: BrushState) => state.brush);
   const color = useBrushStore((state: BrushState) => state.color);
@@ -47,7 +48,7 @@ export default function Editor() {
     const spriteSmallestDimension = Math.min(sprite.width, sprite.height);
     const pixelSize = Math.max(
       1,
-      Math.floor(parentSmallestDimension / spriteSmallestDimension) * 0.95,
+      Math.floor((parentSmallestDimension * 0.8) / spriteSmallestDimension)
     );
     canvas.width = sprite.width * pixelSize;
     canvas.height = sprite.height * pixelSize;
@@ -77,12 +78,12 @@ export default function Editor() {
     const composite = compositeFrame(
       newSprite.frames[currentFrame],
       newSprite.width,
-      newSprite.height,
+      newSprite.height
     );
     const imageData = new ImageData(
       composite,
       newSprite.width,
-      newSprite.height,
+      newSprite.height
     );
 
     const tempCanvas = document.createElement("canvas");
@@ -104,13 +105,13 @@ export default function Editor() {
       0,
       0,
       sprite.width * pixelSize,
-      sprite.height * pixelSize,
+      sprite.height * pixelSize
     );
   }, [sprite, currentFrame, currentLayer, scale]);
 
   useEffect(() => {
     draw();
-  }, [sprite, canvasRef.current]);
+  }, [sprite, canvasRef.current, currentFrame, currentLayer]);
 
   useEffect(() => {
     window.addEventListener("resize", draw);
@@ -123,7 +124,7 @@ export default function Editor() {
   }, []);
 
   function getCoordinates(
-    event: React.MouseEvent,
+    event: React.MouseEvent
   ): { x: number; y: number } | undefined {
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -139,7 +140,7 @@ export default function Editor() {
     const index = coordinatesToIndex(
       coordinates.x,
       coordinates.y,
-      sprite.width,
+      sprite.width
     );
 
     const newSprite = copySprite(sprite);
@@ -155,7 +156,7 @@ export default function Editor() {
         sprite.width,
         sprite.height,
         oldColor,
-        newColor,
+        newColor
       );
     } else {
       newColor =
@@ -197,7 +198,7 @@ export default function Editor() {
     startY: number,
     endX: number,
     endY: number,
-    newColor: Uint8ClampedArray,
+    newColor: Uint8ClampedArray
   ) {
     if (!sprite) return;
 
@@ -244,14 +245,17 @@ export default function Editor() {
   return (
     <div className="grid grid-cols-[auto_1fr_auto] w-full h-full">
       <Brushes />
-      <main>
-        <canvas
-          width="64"
-          height="64"
-          ref={canvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-        />
+      <main className="flex flex-col h-full">
+        <div className="h-2/3 w-full flex items-center justify-center">
+          <canvas
+            width="64"
+            height="64"
+            ref={canvasRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+          />
+        </div>
+        <Animation />
       </main>
       <Colors />
     </div>

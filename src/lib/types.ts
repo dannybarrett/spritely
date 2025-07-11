@@ -14,4 +14,5 @@ export interface Frame {
 export interface Layer {
   name: string | undefined;
   pixels: Uint8ClampedArray;
+  visible: boolean;
 }
