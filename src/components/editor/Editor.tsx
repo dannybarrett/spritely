@@ -246,7 +246,7 @@ export default function Editor() {
     <div className="grid grid-cols-[auto_1fr_auto] w-full h-full">
       <Brushes />
       <main className="flex flex-col h-full">
-        <div className="h-4/5 w-full flex items-center justify-center">
+        <div className="h-3/4 w-full flex items-center justify-center">
           <canvas
             width="64"
             height="64"
