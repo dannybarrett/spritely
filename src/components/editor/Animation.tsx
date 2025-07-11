@@ -72,6 +72,21 @@ export default function Animation() {
     setSprite(newSprite);
   }
 
+  function reorderLayer(startIndex: number, endIndex: number) {
+    if (!sprite) return;
+
+    const newSprite = copySprite(sprite);
+
+    for (const frame of newSprite.frames) {
+      const startLayer = frame.layers[startIndex];
+      const endLayer = frame.layers[endIndex];
+      frame.layers[startIndex] = endLayer;
+      frame.layers[endIndex] = startLayer;
+    }
+
+    setSprite(newSprite);
+  }
+
   const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
     userSelect: "none",
     background: isDragging ? "hsl(0 0% 8%)" : "hsl(0 0% 4%)",
@@ -84,6 +99,12 @@ export default function Animation() {
     if (!result.destination) return;
 
     reorderFrame(result.source.index, result.destination.index);
+  }
+
+  function onDragLayerEnd(result: any) {
+    if (!result.destination) return;
+
+    reorderLayer(result.source.index, result.destination.index);
   }
 
   function addFrame() {
@@ -114,36 +135,58 @@ export default function Animation() {
       <div className="grid grid-cols-[auto_1fr] border-t w-full h-4/5">
         <aside className="border-r flex flex-col">
           <div className="w-full h-[53px] border-b" />
-          {sprite.frames[0].layers.map((layer, index) => (
-            <div
-              key={`layer-controller-${index}`}
-              className="font-mono h-[40px] flex items-end justify-between"
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled
-                className="disabled:opacity-100 font-mono"
-              >
-                {index + 1}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleLayerVisibility(index)}
-              >
-                {layer.visible ? <Eye /> : <EyeClosed />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeLayer(index)}
-                disabled={sprite.frames[0].layers.length === 1}
-              >
-                <Trash />
-              </Button>
-            </div>
-          ))}
+          <DragDropContext onDragEnd={onDragLayerEnd}>
+            <Droppable droppableId="layers">
+              {provided => (
+                <div {...provided.droppableProps} ref={provided.innerRef}>
+                  {sprite.frames[0].layers.map((layer, index) => (
+                    <Draggable
+                      key={`layer-controller-${index}`}
+                      draggableId={`layer-controller-${index}`}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          ref={provided.innerRef}
+                          style={getItemStyle(
+                            snapshot.isDragging,
+                            provided.draggableProps.style
+                          )}
+                          className="font-mono h-[40px] flex items-end justify-between"
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled
+                            className="disabled:opacity-100 font-mono"
+                          >
+                            {index + 1}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleLayerVisibility(index)}
+                          >
+                            {layer.visible ? <Eye /> : <EyeClosed />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeLayer(index)}
+                            disabled={sprite.frames[0].layers.length === 1}
+                          >
+                            <Trash />
+                          </Button>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
           <div className="p-2">
             <Button
               variant="outline"
