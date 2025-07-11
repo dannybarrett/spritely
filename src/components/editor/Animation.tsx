@@ -74,17 +74,17 @@ export default function Animation() {
   }
 
   return (
-    <section className="w-full h-1/4 overflow-scroll">
-      <div className="grid grid-cols-[33%_34%_33%] items-center px-2 sticky top-0 bg-background border-b">
+    <section className="w-full h-1/3 overflow-scroll">
+      <div className="grid grid-cols-[33%_34%_33%] items-center px-2 sticky top-0 bg-background border-b h-1/5">
         <div />
         <AnimationPlayer animationDuration={animationDuration} />
         <Input
           value={animationDuration}
           onChange={e => setAnimationDuration(Number(e.target.value))}
-          className="w-16 text-end justify-self-end"
+          className="w-16 text-end justify-self-end !text-xs font-mono !p-2"
         />
       </div>
-      <div className="grid grid-cols-[auto_1fr] border-t w-full h-full">
+      <div className="grid grid-cols-[auto_1fr] border-t w-full h-4/5">
         <aside className="border-r flex flex-col">
           <div className="w-full h-[53px] border-b" />
           {sprite.frames[0].layers.map((layer, index) => (
@@ -130,12 +130,15 @@ export default function Animation() {
         <div className="flex flex-col w-full">
           <div className="flex items-center border-b">
             {sprite.frames.map((frame, index) => (
-              <div
+              <Button
                 key={`frame-controller-${index}`}
-                className="font-mono w-[40px] h-full grid place-items-center"
+                className="font-mono w-[40px] h-full grid place-items-center disabled:opacity-100"
+                variant="ghost"
+                size="icon"
+                disabled
               >
                 {index + 1}
-              </div>
+              </Button>
             ))}
             <div className="p-2">
               <Button
