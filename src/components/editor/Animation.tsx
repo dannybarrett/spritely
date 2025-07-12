@@ -1,12 +1,13 @@
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import NoSpriteError from "../NoSpriteError";
-import { Layer, Sprite } from "@/lib/types";
+import { Layer } from "@/lib/types";
 import { Button } from "../ui/button";
 import {
   ArrowLeft,
   ArrowRight,
   ChevronFirst,
   ChevronLast,
+  Copy,
   Eye,
   EyeClosed,
   Pause,
@@ -18,11 +19,30 @@ import { copySprite } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
+import { confirm } from "@tauri-apps/plugin-dialog";
 
 export default function Animation() {
   const [animationDuration, setAnimationDuration] = useState(300);
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
   const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
+  const currentFrame = useSpriteStore(
+    (state: SpriteState) => state.currentFrame
+  );
+  const setCurrentFrame = useSpriteStore(
+    (state: SpriteState) => state.setCurrentFrame
+  );
+  const currentLayer = useSpriteStore(
+    (state: SpriteState) => state.currentLayer
+  );
+  const setCurrentLayer = useSpriteStore(
+    (state: SpriteState) => state.setCurrentLayer
+  );
 
   if (!sprite) return <NoSpriteError />;
 
@@ -51,8 +71,35 @@ export default function Animation() {
     setSprite(newSprite);
   }
 
-  function removeLayer(index: number) {
+  function duplicateLayer(index: number) {
     if (!sprite) return;
+
+    const newSprite = copySprite(sprite);
+    newSprite.frames.map(frame => {
+      frame.layers.splice(index + 1, 0, frame.layers[index]);
+    });
+    setSprite(newSprite);
+  }
+
+  async function removeLayer(index: number) {
+    if (!sprite) return;
+
+    const confirmation = await confirm(
+      "Are you sure you want to remove this layer?",
+      {
+        title: "Remove Layer",
+        kind: "warning",
+      }
+    );
+
+    if (!confirmation) return;
+
+    if (
+      currentLayer === index &&
+      index === sprite.frames[0].layers.length - 1
+    ) {
+      setCurrentLayer(Math.max(0, index - 1));
+    }
 
     const newSprite = copySprite(sprite);
     newSprite.frames.map(frame => {
@@ -121,6 +168,36 @@ export default function Animation() {
     setSprite(newSprite);
   }
 
+  function duplicateFrame(index: number) {
+    if (!sprite) return;
+
+    const newSprite = copySprite(sprite);
+    newSprite.frames.splice(index + 1, 0, sprite.frames[index]);
+    setSprite(newSprite);
+  }
+
+  async function removeFrame(index: number) {
+    if (!sprite) return;
+
+    const confirmation = await confirm(
+      "Are you sure you want to remove this frame?",
+      {
+        title: "Remove Frame",
+        kind: "warning",
+      }
+    );
+
+    if (!confirmation) return;
+
+    if (currentFrame === index && index === sprite.frames.length - 1) {
+      setCurrentFrame(Math.max(0, index - 1));
+    }
+
+    const newSprite = copySprite(sprite);
+    newSprite.frames.splice(index, 1);
+    setSprite(newSprite);
+  }
+
   return (
     <section className="w-full h-1/3 overflow-scroll">
       <div className="grid grid-cols-[33%_34%_33%] items-center px-2 sticky top-0 bg-background border-b h-1/5">
@@ -174,6 +251,13 @@ export default function Animation() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => duplicateLayer(index)}
+                          >
+                            <Copy />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => removeLayer(index)}
                             disabled={sprite.frames[0].layers.length === 1}
                           >
@@ -190,7 +274,7 @@ export default function Animation() {
           <div className="p-2">
             <Button
               variant="outline"
-              className="text-xs"
+              className="text-xs w-full"
               onClick={() => addLayer()}
             >
               <Plus /> Add Layer
@@ -216,7 +300,6 @@ export default function Animation() {
                         {(provided, snapshot) => (
                           <div
                             {...provided.draggableProps}
-                            {...provided.dragHandleProps}
                             ref={provided.innerRef}
                             style={getItemStyle(
                               snapshot.isDragging,
@@ -224,14 +307,36 @@ export default function Animation() {
                             )}
                             className="w-fit"
                           >
-                            <Button
-                              disabled
-                              variant="ghost"
-                              size="icon"
-                              className="font-mono w-[40px] h-[40px] grid place-items-center disabled:opacity-100"
-                            >
-                              {index + 1}
-                            </Button>
+                            <ContextMenu>
+                              <ContextMenuTrigger asChild>
+                                <div
+                                  {...provided.dragHandleProps}
+                                  className="font-mono text-sm w-[40px] h-[40px] grid place-items-center"
+                                >
+                                  {index + 1}
+                                </div>
+                              </ContextMenuTrigger>
+                              <ContextMenuContent>
+                                <ContextMenuItem>
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => duplicateFrame(index)}
+                                  >
+                                    <Copy /> Duplicate
+                                  </Button>
+                                </ContextMenuItem>
+                                {sprite.frames.length > 1 && (
+                                  <ContextMenuItem>
+                                    <Button
+                                      variant="ghost"
+                                      onClick={() => removeFrame(index)}
+                                    >
+                                      <Trash /> Delete
+                                    </Button>
+                                  </ContextMenuItem>
+                                )}
+                              </ContextMenuContent>
+                            </ContextMenu>
                           </div>
                         )}
                       </Draggable>
@@ -241,7 +346,7 @@ export default function Animation() {
                 )}
               </Droppable>
               <Button onClick={addFrame} variant="outline">
-                Add Frame
+                <Plus /> Add Frame
               </Button>
             </div>
           </DragDropContext>
