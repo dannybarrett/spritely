@@ -87,3 +87,86 @@ export function fill(
     fill(pixels, x, y + 1, width, height, oldColor, newColor);
   }
 }
+
+export function hsbToRgb(
+  hue: number,
+  saturation: number,
+  brightness: number
+): number[] {
+  // Normalize H, S, B to [0, 1] range for calculations
+  const normalizedHue = hue / 360;
+  const normalizedSaturation = saturation / 100;
+  const normalizedBrightness = brightness / 100;
+
+  let redComponent = 0;
+  let greenComponent = 0;
+  let blueComponent = 0;
+
+  if (normalizedSaturation === 0) {
+    // If saturation is 0, the color is a shade of gray.
+    // All RGB components are equal to the brightness (scaled to 0-255).
+    redComponent = greenComponent = blueComponent = normalizedBrightness;
+  } else {
+    // --- Intermediate Calculations for Saturated Colors ---
+
+    // Calculate the sector of the color wheel (0-5)
+    // Each sector is 60 degrees.
+    const sectorIndex = Math.floor(normalizedHue * 6);
+
+    // Calculate the fractional part of the hue within its sector
+    // This indicates how far into the current 60-degree sector we are.
+    const fractionalPart = normalizedHue * 6 - sectorIndex;
+
+    // Calculate the components that will determine the final RGB values.
+    // These 'p', 'q', 't' values represent the min, decreasing, and increasing
+    // components within the current 60-degree color sector, based on
+    // overall brightness and saturation.
+
+    const p = normalizedBrightness * (1 - normalizedSaturation); // Minimum value (black contribution)
+    const q =
+      normalizedBrightness * (1 - fractionalPart * normalizedSaturation); // Component decreasing in value
+    const t =
+      normalizedBrightness * (1 - (1 - fractionalPart) * normalizedSaturation); // Component increasing in value
+
+    // --- Assign RGB components based on the hue sector ---
+    switch (sectorIndex) {
+      case 0: // Red-Yellow sector (H: 0 to <60)
+        redComponent = normalizedBrightness;
+        greenComponent = t;
+        blueComponent = p;
+        break;
+      case 1: // Yellow-Green sector (H: 60 to <120)
+        redComponent = q;
+        greenComponent = normalizedBrightness;
+        blueComponent = p;
+        break;
+      case 2: // Green-Cyan sector (H: 120 to <180)
+        redComponent = p;
+        greenComponent = normalizedBrightness;
+        blueComponent = t;
+        break;
+      case 3: // Cyan-Blue sector (H: 180 to <240)
+        redComponent = p;
+        greenComponent = q;
+        blueComponent = normalizedBrightness;
+        break;
+      case 4: // Blue-Magenta sector (H: 240 to <300)
+        redComponent = t;
+        greenComponent = p;
+        blueComponent = normalizedBrightness;
+        break;
+      case 5: // Magenta-Red sector (H: 300 to <360)
+        redComponent = normalizedBrightness;
+        greenComponent = p;
+        blueComponent = q;
+        break;
+    }
+  }
+
+  // Convert the calculated RGB components (which are 0-1) to 0-255 range and round them
+  return [
+    Math.round(redComponent * 255),
+    Math.round(greenComponent * 255),
+    Math.round(blueComponent * 255),
+  ];
+}
