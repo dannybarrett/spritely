@@ -13,6 +13,7 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { SpriteState, useSpriteStore } from "@/stores/spriteStore";
 import { Frame, Layer } from "@/lib/types";
+import { BrushState, useBrushStore } from "@/stores/brushStore";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -22,6 +23,8 @@ const formSchema = z.object({
 
 export default function CreateSpriteForm() {
   const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
+  const setColor = useBrushStore((state: BrushState) => state.setColor);
+  const setAltColor = useBrushStore((state: BrushState) => state.setAltColor);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,6 +50,8 @@ export default function CreateSpriteForm() {
     };
     const black = new Uint8ClampedArray([0, 0, 0, 255]);
     const white = new Uint8ClampedArray([255, 255, 255, 255]);
+    setColor(black);
+    setAltColor(white);
 
     setSprite({
       name: data.name,
