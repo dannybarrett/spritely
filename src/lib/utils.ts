@@ -9,6 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export function copySprite(sprite: Sprite): Sprite {
   return {
     ...sprite,
+    colors: [...sprite.colors],
     frames: sprite.frames.map(frame => ({
       ...frame,
       layers: frame.layers.map(layer => ({
