@@ -21,7 +21,7 @@ export default function Colors() {
           key={index}
           variant="outline"
           size="icon"
-          onMouseDown={(event) => {
+          onMouseDown={event => {
             if (event.buttons === 1) {
               setColor(col);
             } else if (event.buttons === 2) {
@@ -43,4 +43,8 @@ export default function Colors() {
       ))}
     </section>
   );
+}
+
+function ColorSelector() {
+  return <div>color selector</div>;
 }
