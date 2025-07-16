@@ -31,7 +31,12 @@ export default function Brushes() {
       key: "g",
     },
     { name: Brush.LINE, icon: <Minus />, key: "l" },
-    { name: Brush.RECTANGLE, icon: <Square className="bg-white" />, key: "r" },
+    {
+      name: Brush.RECTANGLE,
+      icon: <Square className="bg-white rounded-sm" />,
+      key: "r",
+    },
+    { name: Brush.RECTANGLE_OUTLINE, icon: <Square />, key: "t" },
   ];
 
   function handleInput(event: KeyboardEvent) {
