@@ -1,5 +1,5 @@
 import { Brush, useBrushStore } from "@/stores/brushStore";
-import { Eraser, MoveDiagonal, PaintBucket, Pencil } from "lucide-react";
+import { Eraser, Minus, PaintBucket, Pencil, Square } from "lucide-react";
 import { Button } from "../ui/button";
 import { useEffect } from "react";
 
@@ -23,7 +23,13 @@ export default function Brushes() {
       icon: <PaintBucket />,
       key: "g",
     },
-    { name: Brush.LINE, icon: <MoveDiagonal />, key: "l" },
+    { name: Brush.LINE, icon: <Minus />, key: "l" },
+    {
+      name: Brush.RECTANGLE,
+      icon: <Square className="bg-white rounded-sm" />,
+      key: "r",
+    },
+    { name: Brush.RECTANGLE_OUTLINE, icon: <Square />, key: "t" },
   ];
 
   function handleInput(event: KeyboardEvent) {
