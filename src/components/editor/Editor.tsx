@@ -18,6 +18,12 @@ export default function Editor() {
   const [scale, setScale] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lastMousePosition = useRef<{ x: number; y: number } | null>(null);
+  const startMousePosition = useRef<{ x: number; y: number } | null>(null);
+  const endMousePosition = useRef<{ x: number; y: number } | null>(null);
+  const mouseButton = useRef<number>(0);
+  const [brushPixels, setBrushPixels] = useState<Uint8ClampedArray | null>(
+    null
+  );
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
   const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
   const currentFrame = useSpriteStore(
@@ -107,11 +113,42 @@ export default function Editor() {
       sprite.width * pixelSize,
       sprite.height * pixelSize
     );
-  }, [sprite, currentFrame, currentLayer, scale]);
+
+    // draw brush pixels
+    if (brushPixels) {
+      const brushImageData = new ImageData(
+        brushPixels,
+        newSprite.width,
+        newSprite.height
+      );
+
+      const brushTempCanvas = document.createElement("canvas");
+      const brushTempContext = brushTempCanvas.getContext("2d");
+      if (!brushTempContext)
+        return console.error("Unable to create temporary canvas.");
+
+      brushTempCanvas.width = sprite.width;
+      brushTempCanvas.height = sprite.height;
+      brushTempContext.putImageData(brushImageData, 0, 0);
+
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        brushTempCanvas,
+        0,
+        0,
+        sprite.width,
+        sprite.height,
+        0,
+        0,
+        sprite.width * pixelSize,
+        sprite.height * pixelSize
+      );
+    }
+  }, [sprite, currentFrame, currentLayer, scale, brushPixels]);
 
   useEffect(() => {
     draw();
-  }, [sprite, canvasRef.current, currentFrame, currentLayer]);
+  }, [sprite, canvasRef.current, currentFrame, currentLayer, brushPixels]);
 
   useEffect(() => {
     window.addEventListener("resize", draw);
@@ -158,6 +195,13 @@ export default function Editor() {
         oldColor,
         newColor
       );
+    } else if (brush === Brush.LINE) {
+      mouseButton.current = event.buttons;
+      startMousePosition.current = coordinates;
+      endMousePosition.current = coordinates;
+      const newPixels = new Uint8ClampedArray(sprite.width * sprite.height * 4);
+      setPixel(newPixels, index, newColor);
+      setBrushPixels(newPixels);
     } else {
       newColor =
         brush === Brush.ERASER ? new Uint8ClampedArray([0, 0, 0, 0]) : newColor;
@@ -182,15 +226,105 @@ export default function Editor() {
 
     const { x: endX, y: endY } = coordinates;
     const { x: startX, y: startY } = lastMousePosition.current || coordinates;
+    endMousePosition.current = coordinates;
     let newColor = event.buttons === 1 ? color : altColor;
     newColor =
       brush === Brush.ERASER ? new Uint8ClampedArray([0, 0, 0, 0]) : newColor;
-    drawLine(startX, startY, endX, endY, newColor);
+    if (brush === Brush.LINE) {
+      const newPixels = new Uint8ClampedArray(sprite.width * sprite.height * 4);
+      if (!startMousePosition.current || !endMousePosition.current) return;
+      drawEntireLine(
+        newPixels,
+        startMousePosition.current.x,
+        startMousePosition.current.y,
+        endMousePosition.current.x,
+        endMousePosition.current.y,
+        newColor
+      );
+      setBrushPixels(newPixels);
+    } else {
+      drawLine(startX, startY, endX, endY, newColor);
+    }
     lastMousePosition.current = coordinates;
+  }
+
+  function handleEditorMouseUp(event: React.MouseEvent) {
+    const coordinates = getCoordinates(event);
+    if (
+      !coordinates ||
+      !sprite ||
+      !brushPixels ||
+      !startMousePosition.current ||
+      !endMousePosition.current
+    )
+      return;
+
+    const newSprite = copySprite(sprite);
+    const pixels = newSprite.frames[currentFrame].layers[currentLayer].pixels;
+
+    if (brush === Brush.LINE) {
+      drawEntireLine(
+        pixels,
+        startMousePosition.current.x,
+        startMousePosition.current.y,
+        endMousePosition.current.x,
+        endMousePosition.current.y,
+        mouseButton.current === 1 ? color : altColor
+      );
+    }
+    setSprite(newSprite);
+    setBrushPixels(null);
+    startMousePosition.current = null;
+    endMousePosition.current = null;
+    mouseButton.current = 0;
   }
 
   function handleMouseUp() {
     lastMousePosition.current = null;
+  }
+
+  function drawEntireLine(
+    pixs: Uint8ClampedArray,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    newColor: Uint8ClampedArray
+  ) {
+    const deltaX = Math.abs(endX - startX);
+    const deltaY = Math.abs(endY - startY);
+    const stepX = startX < endX ? 1 : -1;
+    const stepY = startY < endY ? 1 : -1;
+    let errorTerm = deltaX - deltaY;
+    let x = startX;
+    let y = startY;
+
+    while (true && sprite) {
+      const index = coordinatesToIndex(x, y, sprite.width);
+
+      if (
+        x >= 0 &&
+        x < sprite.width &&
+        y >= 0 &&
+        y < pixs.length / sprite.width
+      ) {
+        setPixel(pixs, index, newColor);
+
+        if (x === endX && y === endY) break;
+
+        const twoTimesError = 2 * errorTerm;
+
+        if (twoTimesError > -deltaY) {
+          errorTerm -= deltaY;
+          x += stepX;
+        }
+
+        if (twoTimesError < deltaX) {
+          errorTerm += deltaX;
+          y += stepY;
+        }
+      }
+    }
   }
 
   function drawLine(
@@ -253,6 +387,7 @@ export default function Editor() {
             ref={canvasRef}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
+            onMouseUp={handleEditorMouseUp}
           />
         </div>
         <Animation />
