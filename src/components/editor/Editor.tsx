@@ -195,7 +195,7 @@ export default function Editor() {
         oldColor,
         newColor
       );
-    } else if (brush === Brush.LINE) {
+    } else if (brush === Brush.LINE || brush === Brush.RECTANGLE) {
       mouseButton.current = event.buttons;
       startMousePosition.current = coordinates;
       endMousePosition.current = coordinates;
@@ -242,6 +242,34 @@ export default function Editor() {
         newColor
       );
       setBrushPixels(newPixels);
+    } else if (brush === Brush.RECTANGLE) {
+      if (!startMousePosition.current || !endMousePosition.current) return;
+
+      const newPixels = new Uint8ClampedArray(sprite.width * sprite.height * 4);
+      let x1 = Math.min(
+        startMousePosition.current.x,
+        endMousePosition.current.x
+      );
+      let x2 = Math.max(
+        startMousePosition.current.x,
+        endMousePosition.current.x
+      );
+      let y1 = Math.min(
+        startMousePosition.current.y,
+        endMousePosition.current.y
+      );
+      let y2 = Math.max(
+        startMousePosition.current.y,
+        endMousePosition.current.y
+      );
+
+      for (let x = x1; x <= x2; x++) {
+        for (let y = y1; y <= y2; y++) {
+          const index = coordinatesToIndex(x, y, sprite.width);
+          setPixel(newPixels, index, newColor);
+        }
+      }
+      setBrushPixels(newPixels);
     } else {
       drawLine(startX, startY, endX, endY, newColor);
     }
@@ -271,6 +299,29 @@ export default function Editor() {
         endMousePosition.current.y,
         mouseButton.current === 1 ? color : altColor
       );
+    } else if (brush === Brush.RECTANGLE) {
+      let x1 = Math.min(
+        startMousePosition.current.x,
+        endMousePosition.current.x
+      );
+      let x2 = Math.max(
+        startMousePosition.current.x,
+        endMousePosition.current.x
+      );
+      let y1 = Math.min(
+        startMousePosition.current.y,
+        endMousePosition.current.y
+      );
+      let y2 = Math.max(
+        startMousePosition.current.y,
+        endMousePosition.current.y
+      );
+      for (let x = x1; x <= x2; x++) {
+        for (let y = y1; y <= y2; y++) {
+          const index = coordinatesToIndex(x, y, sprite.width);
+          setPixel(pixels, index, mouseButton.current === 1 ? color : altColor);
+        }
+      }
     }
     setSprite(newSprite);
     setBrushPixels(null);

@@ -14,6 +14,7 @@ export enum Brush {
   ERASER = "Eraser",
   FILL = "Fill",
   LINE = "Line",
+  RECTANGLE = "Rectangle",
 }
 
 export const useBrushStore = create<BrushState>(set => ({
