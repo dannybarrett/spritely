@@ -17,6 +17,7 @@ import {
 } from "./ui/dialog";
 import { useState } from "react";
 import ExportSpriteForm from "./ExportSpriteForm";
+import { exit } from "@tauri-apps/plugin-process";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -74,9 +75,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 "Any unsaved changes will be lost. Are you sure you want to open a new file?"
               );
               if (!confirmation) return;
-              setSprite(undefined);
-              setHistory([], []);
             }
+            setSprite(undefined);
+            setHistory([], []);
           },
           key: {
             name: "n",
@@ -117,9 +118,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Exit",
-          action: () => console.log("exit"),
+          action: async () => {
+            if (sprite) {
+              const confirmation = await confirm(
+                "Any unsaved changes will be lost. Are you sure you want to exit?"
+              );
+              if (!confirmation) return;
+            }
+            await exit();
+          },
           key: {
-            name: "q",
+            name: null,
             modifiers: { meta: true, shift: false, alt: false },
           },
         },
