@@ -17,10 +17,13 @@ import {
 } from "./ui/dialog";
 import { useState } from "react";
 import ExportSpriteForm from "./ExportSpriteForm";
+import { exit } from "@tauri-apps/plugin-process";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
+  const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
+  const setHistory = useSpriteStore((state: SpriteState) => state.setHistory);
   const undo = useSpriteStore((state: SpriteState) => state.undo);
   const redo = useSpriteStore((state: SpriteState) => state.redo);
   const savePath = useSpriteStore((state: SpriteState) => state.savePath);
@@ -66,7 +69,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       items: [
         {
           name: "New",
-          action: () => console.log("new"),
+          action: async () => {
+            if (sprite) {
+              const confirmation = await confirm(
+                "Any unsaved changes will be lost. Are you sure you want to open a new file?"
+              );
+              if (!confirmation) return;
+            }
+            setSprite(undefined);
+            setHistory([], []);
+          },
           key: {
             name: "n",
             modifiers: { meta: true, shift: false, alt: false },
@@ -106,9 +118,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         },
         {
           name: "Exit",
-          action: () => console.log("exit"),
+          action: async () => {
+            if (sprite) {
+              const confirmation = await confirm(
+                "Any unsaved changes will be lost. Are you sure you want to exit?"
+              );
+              if (!confirmation) return;
+            }
+            await exit();
+          },
           key: {
-            name: "q",
+            name: null,
             modifiers: { meta: true, shift: false, alt: false },
           },
         },
@@ -137,7 +157,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     },
   ];
 
-  function handleKeyDown(event: KeyboardEvent) {
+  async function handleKeyDown(event: KeyboardEvent) {
     const { key, ctrlKey, metaKey, shiftKey, altKey } = event;
     const modifiers = {
       meta: metaKey || ctrlKey,
@@ -153,7 +173,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           item.key.modifiers.shift === modifiers.shift &&
           item.key.modifiers.alt === modifiers.alt
         ) {
-          item.action();
+          await item.action();
           return;
         }
       }
@@ -183,11 +203,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <MenubarMenu key={menu.name}>
             <MenubarTrigger>{menu.name}</MenubarTrigger>
             <MenubarContent>
-              {menu.items.map(item => (
-                <MenubarItem key={item.name} onClick={item.action}>
-                  {item.name}
-                </MenubarItem>
-              ))}
+              {menu.items.map(item => {
+                const ctrlString = item.key.modifiers.meta ? "Ctrl+" : "";
+                const shiftString = item.key.modifiers.shift ? "Shift+" : "";
+                const altString = item.key.modifiers.alt ? "Alt+" : "";
+                return (
+                  <MenubarItem
+                    key={item.name}
+                    onClick={item.action}
+                    className="flex justify-between"
+                  >
+                    {item.name}
+                    {item.key.name && (
+                      <span className="font-mono text-xs">
+                        {ctrlString}
+                        {shiftString}
+                        {altString}
+                        {item.key.name.toUpperCase()}
+                      </span>
+                    )}
+                  </MenubarItem>
+                );
+              })}
             </MenubarContent>
           </MenubarMenu>
         ))}

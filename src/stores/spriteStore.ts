@@ -12,6 +12,7 @@ export interface SpriteState {
   setCurrentLayer: (layer: number) => void;
   prevHistory: Sprite[];
   nextHistory: Sprite[];
+  setHistory: (prev: Sprite[], next: Sprite[]) => void;
   undo: () => void;
   redo: () => void;
   savePath: string;
@@ -42,6 +43,8 @@ export const useSpriteStore = create<SpriteState>((set, get) => ({
   setCurrentLayer: (layer: number) => set({ currentLayer: layer }),
   prevHistory: [],
   nextHistory: [],
+  setHistory: (prev: Sprite[], next: Sprite[]) =>
+    set({ prevHistory: prev, nextHistory: next }),
   undo: () => {
     const prevHistory = [...get().prevHistory];
 

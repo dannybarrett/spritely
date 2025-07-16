@@ -1,7 +1,7 @@
+use image::{ImageBuffer, ImageFormat};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use image::{ImageBuffer, ImageFormat};
 use std::path::Path;
 
 #[tauri::command]
@@ -31,13 +31,9 @@ async fn export_sprite(
     pixels: Vec<u8>,
 ) -> Result<(), String> {
     tokio::task::spawn_blocking(move || {
-        let original_img = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_vec(
-            width,
-            height,
-            pixels,
-        )
-        .ok_or_else(|| "Failed to create original image buffer from pixels".to_string())?;
-
+        let original_img =
+            image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_vec(width, height, pixels)
+                .ok_or_else(|| "Failed to create original image buffer from pixels".to_string())?;
 
         let final_img;
 
@@ -53,8 +49,8 @@ async fn export_sprite(
             final_img = original_img;
         }
 
-
-        final_img.save(&path)
+        final_img
+            .save(&path)
             .map_err(|e| format!("Failed to save image to {}: {}", path, e))?;
 
         Ok(())
@@ -66,9 +62,14 @@ async fn export_sprite(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![save_sprite, open_sprite, export_sprite])
+        .invoke_handler(tauri::generate_handler![
+            save_sprite,
+            open_sprite,
+            export_sprite
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
