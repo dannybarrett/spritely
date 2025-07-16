@@ -1,12 +1,5 @@
 import { Brush, useBrushStore } from "@/stores/brushStore";
-import {
-  Eraser,
-  Minus,
-  MoveDiagonal,
-  PaintBucket,
-  Pencil,
-  Square,
-} from "lucide-react";
+import { Eraser, Minus, PaintBucket, Pencil, Square } from "lucide-react";
 import { Button } from "../ui/button";
 import { useEffect } from "react";
 
