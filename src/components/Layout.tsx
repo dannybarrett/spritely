@@ -203,11 +203,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <MenubarMenu key={menu.name}>
             <MenubarTrigger>{menu.name}</MenubarTrigger>
             <MenubarContent>
-              {menu.items.map(item => (
-                <MenubarItem key={item.name} onClick={item.action}>
-                  {item.name}
-                </MenubarItem>
-              ))}
+              {menu.items.map(item => {
+                const ctrlString = item.key.modifiers.meta ? "Ctrl+" : "";
+                const shiftString = item.key.modifiers.shift ? "Shift+" : "";
+                const altString = item.key.modifiers.alt ? "Alt+" : "";
+                return (
+                  <MenubarItem
+                    key={item.name}
+                    onClick={item.action}
+                    className="flex justify-between"
+                  >
+                    {item.name}
+                    {item.key.name && (
+                      <span className="font-mono text-xs">
+                        {ctrlString}
+                        {shiftString}
+                        {altString}
+                        {item.key.name.toUpperCase()}
+                      </span>
+                    )}
+                  </MenubarItem>
+                );
+              })}
             </MenubarContent>
           </MenubarMenu>
         ))}
