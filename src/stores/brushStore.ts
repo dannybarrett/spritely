@@ -13,13 +13,14 @@ export enum Brush {
   PENCIL = "Pencil",
   ERASER = "Eraser",
   FILL = "Fill",
+  LINE = "Line",
 }
 
-export const useBrushStore = create<BrushState>((set) => ({
+export const useBrushStore = create<BrushState>(set => ({
   brush: Brush.PENCIL,
-  setBrush: (brush) => set({ brush }),
+  setBrush: brush => set({ brush }),
   color: new Uint8ClampedArray([0, 0, 0, 255]),
-  setColor: (color) => set({ color }),
+  setColor: color => set({ color }),
   altColor: new Uint8ClampedArray([255, 255, 255, 255]),
-  setAltColor: (color) => set({ altColor: color }),
+  setAltColor: color => set({ altColor: color }),
 }));
