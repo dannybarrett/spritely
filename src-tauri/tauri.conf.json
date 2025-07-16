@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "spritely",
+        "title": "Spritely",
         "width": 1024,
         "height": 576,
         "maximized": true
