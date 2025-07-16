@@ -21,6 +21,8 @@ import ExportSpriteForm from "./ExportSpriteForm";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const sprite = useSpriteStore((state: SpriteState) => state.sprite);
+  const setSprite = useSpriteStore((state: SpriteState) => state.setSprite);
+  const setHistory = useSpriteStore((state: SpriteState) => state.setHistory);
   const undo = useSpriteStore((state: SpriteState) => state.undo);
   const redo = useSpriteStore((state: SpriteState) => state.redo);
   const savePath = useSpriteStore((state: SpriteState) => state.savePath);
@@ -66,7 +68,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       items: [
         {
           name: "New",
-          action: () => console.log("new"),
+          action: async () => {
+            if (sprite) {
+              const confirmation = await confirm(
+                "Any unsaved changes will be lost. Are you sure you want to open a new file?"
+              );
+              if (!confirmation) return;
+              setSprite(undefined);
+              setHistory([], []);
+            }
+          },
           key: {
             name: "n",
             modifiers: { meta: true, shift: false, alt: false },
@@ -137,7 +148,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     },
   ];
 
-  function handleKeyDown(event: KeyboardEvent) {
+  async function handleKeyDown(event: KeyboardEvent) {
     const { key, ctrlKey, metaKey, shiftKey, altKey } = event;
     const modifiers = {
       meta: metaKey || ctrlKey,
@@ -153,7 +164,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           item.key.modifiers.shift === modifiers.shift &&
           item.key.modifiers.alt === modifiers.alt
         ) {
-          item.action();
+          await item.action();
           return;
         }
       }
