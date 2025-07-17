@@ -1,7 +1,23 @@
-# Tauri + React + Typescript
+# Spritely
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+## An open source cross platform sprite editor
 
-## Recommended IDE Setup
+### Features
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- Sprite Editor
+- Animation Editor
+- Export up to 4096x4096 sprites
+
+### Installation
+
+- Go to [https://ex4ust.itch.io/spritely](https://ex4ust.itch.io/spritely) and download the latest release OR
+- Go to [https://github.com/dannybarrett/spritely/tags](https://github.com/dannybarrett/spritely/tags) and download the latest release
+
+### Hotkeys
+
+- B - Pencil Tool
+- E - Eraser Tool
+- G - Fill Tool
+- L - Line Tool
+- R - Rectangle Tool
+- T - Rectangle Outline Tool
