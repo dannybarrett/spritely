@@ -2,7 +2,7 @@
 
 ## An open source cross platform sprite editor
 
-![spritely](https://github.com/dannybarrett/spritely/tree/main/public/spritely.jpg)
+![spritely](https://raw.githubusercontent.com/dannybarrett/spritely/refs/heads/main/public/spritely.jpg)
 
 ### Features
 
