@@ -2,6 +2,8 @@
 
 ## An open source cross platform sprite editor
 
+![spritely](https://github.com/dannybarrett/spritely/tree/main/public/spritely.jpg)
+
 ### Features
 
 - Sprite Editor
