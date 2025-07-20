@@ -16,6 +16,8 @@ export enum Brush {
   LINE = "Line",
   RECTANGLE = "Rectangle",
   RECTANGLE_OUTLINE = "RectangleOutline",
+  OVAL = "Oval",
+  OVAL_OUTLINE = "OvalOutline",
 }
 
 export const useBrushStore = create<BrushState>(set => ({
