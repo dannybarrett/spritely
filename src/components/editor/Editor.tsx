@@ -198,7 +198,9 @@ export default function Editor() {
     } else if (
       brush === Brush.LINE ||
       brush === Brush.RECTANGLE ||
-      brush === Brush.RECTANGLE_OUTLINE
+      brush === Brush.RECTANGLE_OUTLINE ||
+      brush === Brush.OVAL ||
+      brush === Brush.OVAL_OUTLINE
     ) {
       mouseButton.current = event.buttons;
       startMousePosition.current = coordinates;
@@ -245,6 +247,38 @@ export default function Editor() {
         endMousePosition.current.y,
         newColor
       );
+      setBrushPixels(newPixels);
+    } else if (brush === Brush.OVAL_OUTLINE) {
+      if (!startMousePosition.current || !endMousePosition.current) return;
+      const newPixels = new Uint8ClampedArray(sprite.width * sprite.height * 4);
+      drawOval(
+        newPixels,
+        sprite.width,
+        sprite.height,
+        startMousePosition.current.x,
+        startMousePosition.current.y,
+        endMousePosition.current.x,
+        endMousePosition.current.y,
+        newColor,
+        false
+      );
+
+      setBrushPixels(newPixels);
+    } else if (brush === Brush.OVAL) {
+      if (!startMousePosition.current || !endMousePosition.current) return;
+      const newPixels = new Uint8ClampedArray(sprite.width * sprite.height * 4);
+      drawOval(
+        newPixels,
+        sprite.width,
+        sprite.height,
+        startMousePosition.current.x,
+        startMousePosition.current.y,
+        endMousePosition.current.x,
+        endMousePosition.current.y,
+        newColor,
+        true
+      );
+
       setBrushPixels(newPixels);
     } else if (brush === Brush.RECTANGLE) {
       if (!startMousePosition.current || !endMousePosition.current) return;
@@ -329,6 +363,30 @@ export default function Editor() {
         endMousePosition.current.y,
         mouseButton.current === 1 ? color : altColor
       );
+    } else if (brush === Brush.OVAL_OUTLINE) {
+      drawOval(
+        pixels,
+        sprite.width,
+        sprite.height,
+        startMousePosition.current.x,
+        startMousePosition.current.y,
+        endMousePosition.current.x,
+        endMousePosition.current.y,
+        mouseButton.current === 1 ? color : altColor,
+        false
+      );
+    } else if (brush === Brush.OVAL) {
+      drawOval(
+        pixels,
+        sprite.width,
+        sprite.height,
+        startMousePosition.current.x,
+        startMousePosition.current.y,
+        endMousePosition.current.x,
+        endMousePosition.current.y,
+        mouseButton.current === 1 ? color : altColor,
+        true
+      );
     } else if (brush === Brush.RECTANGLE) {
       let x1 = Math.min(
         startMousePosition.current.x,
@@ -411,6 +469,67 @@ export default function Editor() {
 
   function handleMouseUp() {
     lastMousePosition.current = null;
+  }
+
+  function drawOval(
+    pixs: Uint8ClampedArray,
+    imageWidth: number,
+    imageHeight: number,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    newColor: Uint8ClampedArray,
+    fillOval: boolean
+  ): void {
+    const x0 = Math.min(startX, endX);
+    const y0 = Math.min(startY, endY);
+    const x1 = Math.max(startX, endX);
+    const y1 = Math.max(startY, endY);
+
+    const centerX = (x0 + x1) / 2;
+    const centerY = (y0 + y1) / 2;
+    const rx = (x1 - x0) / 2;
+    const ry = (y1 - y0) / 2;
+
+    const setPixel = (px: number, py: number) => {
+      const x = Math.round(px);
+      const y = Math.round(py);
+      if (x >= 0 && x < imageWidth && y >= 0 && y < imageHeight) {
+        const index = (y * imageWidth + x) * 4;
+        pixs.set(newColor, index);
+      }
+    };
+
+    if (rx <= 0 || ry <= 0) return;
+
+    // Outline using parametric equations - guarantees symmetry
+    const circumference =
+      Math.PI * (3 * (rx + ry) - Math.sqrt((3 * rx + ry) * (rx + 3 * ry)));
+    const steps = Math.max(Math.round(circumference), 64);
+
+    for (let i = 0; i < steps; i++) {
+      const angle = (2 * Math.PI * i) / steps;
+      const x = centerX + rx * Math.cos(angle);
+      const y = centerY + ry * Math.sin(angle);
+      setPixel(x, y);
+    }
+
+    if (fillOval) {
+      const oldColor = getColorAtIndex(
+        pixs,
+        coordinatesToIndex(Math.floor(centerX), Math.floor(centerY), imageWidth)
+      );
+      fill(
+        pixs,
+        Math.floor(centerX),
+        Math.floor(centerY),
+        imageWidth,
+        imageHeight,
+        oldColor,
+        newColor
+      );
+    }
   }
 
   function drawEntireLine(
